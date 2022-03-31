@@ -17,7 +17,7 @@ func (h *Handler) GetURL(c *gin.Context) {
 	shortURL := c.Param("id")
 	fullURL, err := h.storage.Get(shortURL)
 	if err != nil {
-		c.String(400, "")
+		c.String(404, "")
 	} else {
 		c.Status(307)
 		c.Header("Location", fullURL)
