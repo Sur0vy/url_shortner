@@ -6,6 +6,6 @@ import (
 
 func main() {
 
-	const port = 1230
+	const port = 8080
 	server.StartServer(port)
 }

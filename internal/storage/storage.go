@@ -1,14 +1,17 @@
 package storage
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
 
 type URL struct {
 	Full  string `json:"full"`
 	Short string `json:"short"`
 }
 type Storage interface {
-	Insert(fullURL string)
-	Get(id string) string
+	Insert(fullURL string) string
+	Get(id string) (string, error)
 }
 
 type MapStorage struct {
@@ -23,7 +26,7 @@ func NewMapStorage() *MapStorage {
 	}
 }
 
-func (s *MapStorage) Insert(fullURL string) {
+func (s *MapStorage) Insert(fullURL string) string {
 	//пока код не имеет значения
 	s.counter++
 	var url = URL{
@@ -31,9 +34,14 @@ func (s *MapStorage) Insert(fullURL string) {
 		Short: strconv.Itoa(s.counter),
 	}
 	s.data[s.counter] = url
+	return url.Short
 }
 
-func (s *MapStorage) Get(url string) string {
+func (s *MapStorage) Get(url string) (string, error) {
 	//пока код не имеет значения
-	return ""
+	idx, err := strconv.Atoi(url)
+	if err != nil {
+		return "", errors.New("wrong id")
+	}
+	return s.data[idx].Full, nil
 }
