@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/Sur0vy/url_shortner.git/internal/storage"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 )
 
 type Handler struct {
@@ -25,8 +26,12 @@ func (h *Handler) GetURL(c *gin.Context) {
 }
 
 func (h *Handler) CreateShortURL(c *gin.Context) {
-	fullURL := c.Param("url")
-	shortURL := h.storage.Insert(fullURL)
+	var shortURL string
+	fullURL, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		shortURL = ""
+	}
+	shortURL = h.storage.Insert(string(fullURL))
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.String(201, shortURL)
 }

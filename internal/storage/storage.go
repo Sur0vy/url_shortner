@@ -31,7 +31,7 @@ func (s *MapStorage) Insert(fullURL string) string {
 	s.counter++
 	var url = URL{
 		Full:  fullURL,
-		Short: "http://" + strconv.Itoa(s.counter),
+		Short: strconv.Itoa(s.counter),
 	}
 	s.data[s.counter] = url
 	return url.Short
