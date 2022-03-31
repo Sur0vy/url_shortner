@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"errors"
 	"strconv"
 )
 
@@ -39,9 +38,16 @@ func (s *MapStorage) Insert(fullURL string) string {
 
 func (s *MapStorage) Get(url string) (string, error) {
 	//пока код не имеет значения
-	idx, err := strconv.Atoi(url)
-	if err != nil {
-		return "", errors.New("wrong id")
+	return s.getFullURL(url), nil
+}
+
+func (s *MapStorage) getFullURL(shortUrl string) string {
+	//пока код не имеет значения
+	for _, element := range s.data {
+		// element is the element from someSlice for where we are
+		if element.Short == shortUrl {
+			return element.Full
+		}
 	}
-	return s.data[idx].Full, nil
+	return ""
 }
