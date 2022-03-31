@@ -46,11 +46,11 @@ func (s *MapStorage) Get(url string) (string, error) {
 	return fullURL, nil
 }
 
-func (s *MapStorage) getFullURL(shortUrl string) (string, error) {
+func (s *MapStorage) getFullURL(shortURL string) (string, error) {
 	//пока код не имеет значения
 	for _, element := range s.data {
 		// element is the element from someSlice for where we are
-		if element.Short == shortUrl {
+		if element.Short == shortURL {
 			return element.Full, nil
 		}
 	}
