@@ -21,7 +21,7 @@ func (h *Handler) GetURL(c *gin.Context) {
 		c.String(404, "")
 	} else {
 		c.Status(307)
-		c.Header("Location", fullURL)
+		c.Writer.Header().Set("Location", fullURL)
 	}
 }
 
@@ -31,7 +31,7 @@ func (h *Handler) CreateShortURL(c *gin.Context) {
 	if err != nil {
 		shortURL = ""
 	}
-	shortURL = h.storage.Insert(string(fullURL))
+	shortURL = "http://localhost:8080/" + h.storage.Insert(string(fullURL))
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.String(201, shortURL)
 }
