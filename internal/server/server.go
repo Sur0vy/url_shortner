@@ -14,7 +14,6 @@ func StartServer(port int) {
 	router := gin.Default()
 	router.GET("/:id", handler.GetURL)
 	router.POST("/", handler.CreateShortURL)
-	//router.POST("/:url", handler.CreateShortURL)
 	router.NoRoute(handler.ResponseError)
 	router.Run(generateAddress(port))
 }
