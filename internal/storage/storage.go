@@ -37,19 +37,9 @@ func (s *MapStorage) Insert(fullURL string) string {
 	return url.Short
 }
 
-func (s *MapStorage) Get(url string) (string, error) {
-	//пока код не имеет значения
-	fullURL, err := s.getFullURL(url)
-	if err != nil {
-		return "", errors.New("wrong id")
-	}
-	return fullURL, nil
-}
-
-func (s *MapStorage) getFullURL(shortURL string) (string, error) {
+func (s *MapStorage) Get(shortURL string) (string, error) {
 	//пока код не имеет значения
 	for _, element := range s.data {
-		// element is the element from someSlice for where we are
 		if element.Short == shortURL {
 			return element.Full, nil
 		}

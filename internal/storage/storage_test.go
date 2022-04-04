@@ -2,7 +2,7 @@ package storage
 
 import (
 	"github.com/stretchr/testify/assert"
-	"reflect"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -12,7 +12,7 @@ func TestMapStorage_Get(t *testing.T) {
 		data    map[int]URL
 	}
 	type args struct {
-		url string
+		shortURL string
 	}
 	tests := []struct {
 		name    string
@@ -21,7 +21,40 @@ func TestMapStorage_Get(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Test get #1",
+			fields: fields{
+				counter: 1,
+				data: map[int]URL{
+					1: {
+						Full:  "www.blabla.ru",
+						Short: "1",
+					},
+				},
+			},
+			args: args{
+				shortURL: "1",
+			},
+			want:    "www.blabla.ru",
+			wantErr: false,
+		},
+		{
+			name: "Test get #2",
+			fields: fields{
+				counter: 1,
+				data: map[int]URL{
+					1: {
+						Full:  "www.blabla.ru",
+						Short: "1",
+					},
+				},
+			},
+			args: args{
+				shortURL: "2",
+			},
+			want:    "",
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -29,14 +62,13 @@ func TestMapStorage_Get(t *testing.T) {
 				counter: tt.fields.counter,
 				data:    tt.fields.data,
 			}
-			got, err := s.Get(tt.args.url)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
+			fullURL, err := s.Get(tt.args.shortURL)
+			if !tt.wantErr {
+				require.NoError(t, err)
+				assert.Equal(t, fullURL, tt.want)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("Get() got = %v, want %v", got, tt.want)
-			}
+			assert.Error(t, err)
 		})
 	}
 }
@@ -78,53 +110,19 @@ func TestMapStorage_Insert(t *testing.T) {
 	}
 }
 
-func TestMapStorage_getFullURL(t *testing.T) {
-	type fields struct {
-		counter int
-		data    map[int]URL
-	}
-	type args struct {
-		shortURL string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &MapStorage{
-				counter: tt.fields.counter,
-				data:    tt.fields.data,
-			}
-			got, err := s.getFullURL(tt.args.shortURL)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getFullURL() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("getFullURL() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestNewMapStorage(t *testing.T) {
 	tests := []struct {
 		name string
 		want *MapStorage
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Test creating map storage",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewMapStorage(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewMapStorage() = %v, want %v", got, tt.want)
-			}
+			ms := NewMapStorage()
+			assert.NotNil(t, ms)
 		})
 	}
 }
