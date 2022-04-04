@@ -1,7 +1,6 @@
-package storage_test
+package storage
 
 import (
-	"github.com/Sur0vy/url_shortner.git/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -10,7 +9,7 @@ import (
 func TestMapStorage_Get(t *testing.T) {
 	type fields struct {
 		counter int
-		data    map[int]storage.URL
+		data    map[int]URL
 	}
 	type args struct {
 		shortURL string
@@ -26,7 +25,7 @@ func TestMapStorage_Get(t *testing.T) {
 			name: "Test get #1",
 			fields: fields{
 				counter: 1,
-				data: map[int]storage.URL{
+				data: map[int]URL{
 					1: {
 						Full:  "www.blabla.ru",
 						Short: "1",
@@ -43,7 +42,7 @@ func TestMapStorage_Get(t *testing.T) {
 			name: "Test get #2",
 			fields: fields{
 				counter: 1,
-				data: map[int]storage.URL{
+				data: map[int]URL{
 					1: {
 						Full:  "www.blabla.ru",
 						Short: "1",
@@ -59,7 +58,7 @@ func TestMapStorage_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &storage.MapStorage{
+			s := &MapStorage{
 				Counter: tt.fields.counter,
 				Data:    tt.fields.data,
 			}
@@ -77,7 +76,7 @@ func TestMapStorage_Get(t *testing.T) {
 func TestMapStorage_Insert(t *testing.T) {
 	type fields struct {
 		counter int
-		data    map[int]storage.URL
+		data    map[int]URL
 	}
 	tests := []struct {
 		name    string
@@ -88,7 +87,7 @@ func TestMapStorage_Insert(t *testing.T) {
 			name: "Test insertr #1",
 			fields: fields{
 				counter: 1,
-				data: map[int]storage.URL{
+				data: map[int]URL{
 					1: {
 						Full:  "www.blabla.ru",
 						Short: "1",
@@ -100,7 +99,7 @@ func TestMapStorage_Insert(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := storage.NewMapStorage()
+			ms := NewMapStorage()
 			sh := ms.Insert(tt.fields.data[tt.fields.counter].Full)
 			//пока обработчик ошибок не предусмотрен, но над тестом стоит подумать
 			if !tt.wantErr {
@@ -114,7 +113,7 @@ func TestMapStorage_Insert(t *testing.T) {
 func TestNewMapStorage(t *testing.T) {
 	tests := []struct {
 		name string
-		want *storage.MapStorage
+		want *MapStorage
 	}{
 		{
 			name: "Test creating map storage",
@@ -122,7 +121,7 @@ func TestNewMapStorage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := storage.NewMapStorage()
+			ms := NewMapStorage()
 			assert.NotNil(t, ms)
 		})
 	}
