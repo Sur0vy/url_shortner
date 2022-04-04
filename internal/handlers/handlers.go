@@ -1,4 +1,4 @@
-package app
+package handlers
 
 import (
 	"github.com/Sur0vy/url_shortner.git/internal/storage"
@@ -7,16 +7,16 @@ import (
 )
 
 type Handler struct {
-	storage storage.Storage
+	Storage storage.Storage
 }
 
 func NewHandler(storage storage.Storage) *Handler {
-	return &Handler{storage: storage}
+	return &Handler{Storage: storage}
 }
 
 func (h *Handler) GetURL(c *gin.Context) {
 	shortURL := c.Param("id")
-	fullURL, err := h.storage.Get(shortURL)
+	fullURL, err := h.Storage.Get(shortURL)
 	if err != nil {
 		c.String(404, "")
 	} else {
@@ -31,7 +31,7 @@ func (h *Handler) CreateShortURL(c *gin.Context) {
 	if err != nil {
 		shortURL = ""
 	}
-	shortURL = "http://localhost:8080/" + h.storage.Insert(string(fullURL))
+	shortURL = "http://localhost:8080/" + h.Storage.Insert(string(fullURL))
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.String(201, shortURL)
 }

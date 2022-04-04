@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	const port = 8080
-	server.StartServer(port)
+	const port = ":8080"
+	server.SetupServer().Run(port)
 }
