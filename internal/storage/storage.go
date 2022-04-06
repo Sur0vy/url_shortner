@@ -15,41 +15,31 @@ type Storage interface {
 }
 
 type MapStorage struct {
-	counter int
-	data    map[int]URL
+	Counter int
+	Data    map[int]URL
 }
 
 func NewMapStorage() *MapStorage {
 	return &MapStorage{
-		counter: 0,
-		data:    make(map[int]URL),
+		Counter: 0,
+		Data:    make(map[int]URL),
 	}
 }
 
 func (s *MapStorage) Insert(fullURL string) string {
 	//пока код не имеет значения
-	s.counter++
+	s.Counter++
 	var url = URL{
 		Full:  fullURL,
-		Short: strconv.Itoa(s.counter),
+		Short: strconv.Itoa(s.Counter),
 	}
-	s.data[s.counter] = url
+	s.Data[s.Counter] = url
 	return url.Short
 }
 
-func (s *MapStorage) Get(url string) (string, error) {
+func (s *MapStorage) Get(shortURL string) (string, error) {
 	//пока код не имеет значения
-	fullURL, err := s.getFullURL(url)
-	if err != nil {
-		return "", errors.New("wrong id")
-	}
-	return fullURL, nil
-}
-
-func (s *MapStorage) getFullURL(shortURL string) (string, error) {
-	//пока код не имеет значения
-	for _, element := range s.data {
-		// element is the element from someSlice for where we are
+	for _, element := range s.Data {
 		if element.Short == shortURL {
 			return element.Full, nil
 		}
