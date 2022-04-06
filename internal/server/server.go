@@ -8,11 +8,11 @@ import (
 
 func SetupServer() *gin.Engine {
 	memoryStorage := storage.NewMapStorage()
-	handler := handlers.NewHandler(memoryStorage)
+	handler := handlers.NewBaseHandler(memoryStorage)
 
 	router := gin.Default()
 	router.GET("/:id", handler.GetURL)
 	router.POST("/", handler.CreateShortURL)
-	router.NoRoute(handler.ResponseError)
+	router.NoRoute(handler.ResponseBadRequest)
 	return router
 }

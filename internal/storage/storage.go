@@ -3,6 +3,7 @@ package storage
 import (
 	"errors"
 	"strconv"
+	"sync"
 )
 
 type URL struct {
@@ -17,6 +18,7 @@ type Storage interface {
 type MapStorage struct {
 	Counter int
 	Data    map[int]URL
+	sync.Mutex
 }
 
 func NewMapStorage() *MapStorage {
@@ -28,12 +30,14 @@ func NewMapStorage() *MapStorage {
 
 func (s *MapStorage) Insert(fullURL string) string {
 	//пока код не имеет значения
+	s.Lock()
 	s.Counter++
 	var url = URL{
 		Full:  fullURL,
 		Short: strconv.Itoa(s.Counter),
 	}
 	s.Data[s.Counter] = url
+	s.Unlock()
 	return url.Short
 }
 

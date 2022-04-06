@@ -33,7 +33,7 @@ func TestHandler_CreateShortURL(t *testing.T) {
 			},
 			want: want{
 				body: "http://localhost:8080/1",
-				code: 201,
+				code: http.StatusCreated,
 			},
 		},
 		{
@@ -44,11 +44,10 @@ func TestHandler_CreateShortURL(t *testing.T) {
 			},
 			want: want{
 				body: "http://localhost:8080/2",
-				code: 201,
+				code: http.StatusCreated,
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := server.SetupServer()
@@ -102,7 +101,7 @@ func TestHandler_GetURL(t *testing.T) {
 			},
 			want: want{
 				URL:  "http://www.blabla.net/rrr",
-				code: 307,
+				code: http.StatusTemporaryRedirect,
 			},
 		},
 		{
@@ -115,7 +114,7 @@ func TestHandler_GetURL(t *testing.T) {
 			},
 			want: want{
 				URL:  "",
-				code: 404,
+				code: http.StatusNotFound,
 			},
 		},
 		{
@@ -128,7 +127,7 @@ func TestHandler_GetURL(t *testing.T) {
 			},
 			want: want{
 				URL:  "http://www.blabla.net/blablabla",
-				code: 307,
+				code: http.StatusTemporaryRedirect,
 			},
 		},
 	}
@@ -163,7 +162,7 @@ func TestHandler_GetURL(t *testing.T) {
 func TestNewHandler(t *testing.T) {
 	tests := []struct {
 		name string
-		want *handlers.Handler
+		want *handlers.BaseHandler
 	}{
 		{
 			name: "Test creating handler",
@@ -171,7 +170,7 @@ func TestNewHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := handlers.NewHandler(storage.NewMapStorage())
+			ms := handlers.NewBaseHandler(storage.NewMapStorage())
 			assert.NotNil(t, ms)
 		})
 	}
