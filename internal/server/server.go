@@ -11,8 +11,9 @@ func SetupServer() *gin.Engine {
 	handler := handlers.NewBaseHandler(memoryStorage)
 
 	router := gin.Default()
-	router.GET("/:id", handler.GetURL)
+	router.GET("/:id", handler.GetFullURL)
 	router.POST("/", handler.CreateShortURL)
+	router.POST("/api/shorten", handler.GetShortURL)
 	router.NoRoute(handler.ResponseBadRequest)
 	return router
 }

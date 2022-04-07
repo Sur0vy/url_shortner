@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestMapStorage_Get(t *testing.T) {
+func TestMapStorage_GetFullURL(t *testing.T) {
 	type fields struct {
 		counter int
 		data    map[int]URL
@@ -62,7 +62,7 @@ func TestMapStorage_Get(t *testing.T) {
 				Counter: tt.fields.counter,
 				Data:    tt.fields.data,
 			}
-			fullURL, err := s.Get(tt.args.shortURL)
+			fullURL, err := s.GetFullURL(tt.args.shortURL)
 			if !tt.wantErr {
 				require.NoError(t, err)
 				assert.Equal(t, fullURL, tt.want)
@@ -73,7 +73,7 @@ func TestMapStorage_Get(t *testing.T) {
 	}
 }
 
-func TestMapStorage_Insert(t *testing.T) {
+func TestMapStorage_InsertURL(t *testing.T) {
 	type fields struct {
 		counter int
 		data    map[int]URL
@@ -100,7 +100,7 @@ func TestMapStorage_Insert(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms := NewMapStorage()
-			sh := ms.Insert(tt.fields.data[tt.fields.counter].Full)
+			sh := ms.InsertURL(tt.fields.data[tt.fields.counter].Full)
 			//пока обработчик ошибок не предусмотрен, но над тестом стоит подумать
 			if !tt.wantErr {
 				assert.Equal(t, sh, tt.fields.data[tt.fields.counter].Short)
@@ -123,6 +123,73 @@ func TestNewMapStorage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ms := NewMapStorage()
 			assert.NotNil(t, ms)
+		})
+	}
+}
+
+func TestMapStorage_GetShortURL(t *testing.T) {
+	type fields struct {
+		counter int
+		data    map[int]URL
+	}
+	type args struct {
+		fullURL string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "Test get #1",
+			fields: fields{
+				counter: 1,
+				data: map[int]URL{
+					1: {
+						Full:  "www.blabla.ru",
+						Short: "1",
+					},
+				},
+			},
+			args: args{
+				fullURL: "www.blabla.ru",
+			},
+			want:    "1",
+			wantErr: false,
+		},
+		{
+			name: "Test get #2",
+			fields: fields{
+				counter: 1,
+				data: map[int]URL{
+					1: {
+						Full:  "www.blabla.ru",
+						Short: "1",
+					},
+				},
+			},
+			args: args{
+				fullURL: "",
+			},
+			want:    "2",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &MapStorage{
+				Counter: tt.fields.counter,
+				Data:    tt.fields.data,
+			}
+			fullURL, err := s.GetShortURL(tt.args.fullURL)
+			if !tt.wantErr {
+				require.NoError(t, err)
+				assert.Equal(t, fullURL.Short, tt.want)
+				return
+			}
+			assert.Error(t, err)
 		})
 	}
 }

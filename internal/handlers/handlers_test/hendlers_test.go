@@ -11,6 +11,23 @@ import (
 	"testing"
 )
 
+const (
+	testURL1     string = "http://www.blabla.net/blablabla"
+	testURL1JSON        = "{\"url\":\"http://www.blabla.net/blablabla\"}"
+	testURL2            = "http://www.blabla.net/11111"
+	testURL2JSON        = "{\"url\":\"http://www.blabla.net/11111\"}"
+	testURL3            = "http://www.rrr.com/wer/ggfsd"
+	testURL3JSON        = "{\"url\":\"http://www.rrr.com/wer/ggfsd\"}"
+	testURL4            = "some text"
+
+	testShortURL1     = "1"
+	testShortURL1JSON = "{\"result\":\"1\"}"
+	testShortURL2     = "2"
+	testShortURL2JSON = "{\"result\":\"2\"}"
+
+	prefURL = "http://localhost:8080/"
+)
+
 func TestHandler_CreateShortURL(t *testing.T) {
 	type args struct {
 		body    string
@@ -26,24 +43,24 @@ func TestHandler_CreateShortURL(t *testing.T) {
 		want want
 	}{
 		{
-			name: "Test POST 1",
+			name: "Test POST correct",
 			args: args{
-				body:    "http://www.blabla.net/blablabla",
+				body:    testURL1,
 				trueVal: true,
 			},
 			want: want{
-				body: "http://localhost:8080/1",
+				body: prefURL + testShortURL1,
 				code: http.StatusCreated,
 			},
 		},
 		{
-			name: "Test POST 2",
+			name: "Test POST no entry",
 			args: args{
-				body:    "http://www.blabla.net/11111",
+				body:    testURL2,
 				trueVal: false,
 			},
 			want: want{
-				body: "http://localhost:8080/2",
+				body: prefURL + testShortURL2,
 				code: http.StatusCreated,
 			},
 		},
@@ -74,7 +91,7 @@ func TestHandler_CreateShortURL(t *testing.T) {
 	}
 }
 
-func TestHandler_GetURL(t *testing.T) {
+func TestHandler_GetFullURL(t *testing.T) {
 	type fields struct {
 		body []string
 	}
@@ -92,25 +109,38 @@ func TestHandler_GetURL(t *testing.T) {
 		want   want
 	}{
 		{
-			name: "Test GET 1",
+			name: "Test GET correct",
 			fields: fields{
-				body: []string{"http://www.blabla.net/blablabla", "http://www.blabla.net/rrr", "ffff"},
+				body: []string{testURL1},
 			},
 			args: args{
-				id: "2",
+				id: testShortURL1,
 			},
 			want: want{
-				URL:  "http://www.blabla.net/rrr",
+				URL:  testURL1,
 				code: http.StatusTemporaryRedirect,
 			},
 		},
 		{
-			name: "Test GET 2",
+			name: "Test GET correct from many",
 			fields: fields{
-				body: []string{"http://www.blabla.net/blablabla", "http://www.blabla.net/rrr", "ffff"},
+				body: []string{testURL1, testURL2, testURL3},
 			},
 			args: args{
-				id: "4",
+				id: testShortURL2,
+			},
+			want: want{
+				URL:  testURL2,
+				code: http.StatusTemporaryRedirect,
+			},
+		},
+		{
+			name: "Test GET entry not found",
+			fields: fields{
+				body: []string{testURL1},
+			},
+			args: args{
+				id: testShortURL2,
 			},
 			want: want{
 				URL:  "",
@@ -118,16 +148,16 @@ func TestHandler_GetURL(t *testing.T) {
 			},
 		},
 		{
-			name: "Test GET 3",
+			name: "Test GET no entry",
 			fields: fields{
-				body: []string{"http://www.blabla.net/blablabla", "http://www.blabla.net/rrr", "ffff"},
+				body: []string{},
 			},
 			args: args{
-				id: "1",
+				id: testShortURL1,
 			},
 			want: want{
-				URL:  "http://www.blabla.net/blablabla",
-				code: http.StatusTemporaryRedirect,
+				URL:  "",
+				code: http.StatusNotFound,
 			},
 		},
 	}
@@ -159,7 +189,7 @@ func TestHandler_GetURL(t *testing.T) {
 	}
 }
 
-func TestNewHandler(t *testing.T) {
+func TestNewBaseHandler(t *testing.T) {
 	tests := []struct {
 		name string
 		want *handlers.BaseHandler
@@ -172,6 +202,111 @@ func TestNewHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ms := handlers.NewBaseHandler(storage.NewMapStorage())
 			assert.NotNil(t, ms)
+		})
+	}
+}
+
+func TestBaseHandler_GetShortURL(t *testing.T) {
+	type fields struct {
+		body []string
+	}
+	type args struct {
+		body    string
+		trueVal bool
+	}
+	type want struct {
+		body string
+		code int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{
+			name: "Test getShortURL correct",
+			fields: fields{
+				body: []string{testURL1},
+			},
+			args: args{
+				body:    testURL1JSON,
+				trueVal: true,
+			},
+			want: want{
+				body: testShortURL1JSON,
+				code: http.StatusOK,
+			},
+		},
+		{
+			name: "Test getShortURL no entry",
+			fields: fields{
+				body: []string{testURL1, testURL2},
+			},
+			args: args{
+				body:    testURL3JSON,
+				trueVal: false,
+			},
+			want: want{
+				body: "",
+				code: http.StatusNotFound,
+			},
+		},
+		{
+			name: "Test getShortURL: wrong JSON",
+			fields: fields{
+				body: []string{testURL1, testURL2, testURL3, testURL4},
+			},
+			args: args{
+				body:    testURL4,
+				trueVal: false,
+			},
+			want: want{
+				body: "",
+				code: http.StatusBadRequest,
+			},
+		},
+		{
+			name: "Test getShortURL correct, many entries in storage",
+			fields: fields{
+				body: []string{testURL1, testURL2, testURL3},
+			},
+			args: args{
+				body:    testURL2JSON,
+				trueVal: true,
+			},
+			want: want{
+				body: testShortURL2JSON,
+				code: http.StatusOK,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := server.SetupServer()
+			w := httptest.NewRecorder()
+
+			//заполним БД
+			for _, v := range tt.fields.body {
+				body := bytes.NewBuffer([]byte(v))
+				req, _ := http.NewRequest("POST", "/", body)
+				s.ServeHTTP(w, req)
+			}
+
+			r := httptest.NewRecorder()
+
+			//body := bytes.NewBuffer([]byte(tt.args.body))
+			req, err := http.NewRequest("POST", "/api/shorten", bytes.NewBuffer([]byte(tt.args.body)))
+			s.ServeHTTP(r, req)
+
+			assert.Nil(t, err)
+			assert.Equal(t, tt.want.code, r.Code)
+			if tt.args.trueVal {
+				assert.Equal(t, r.Body, bytes.NewBuffer([]byte(tt.want.body)))
+			} else {
+				assert.Empty(t, r.Body)
+			}
 		})
 	}
 }

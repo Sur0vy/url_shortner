@@ -7,12 +7,22 @@ import (
 )
 
 type URL struct {
-	Full  string `json:"full"`
-	Short string `json:"short"`
+	Full  string `json:"url"`
+	Short string `json:"result"`
 }
+
+type ShortURL struct {
+	Short string `json:"result"`
+}
+
+type FullURL struct {
+	Full string `json:"url"`
+}
+
 type Storage interface {
-	Insert(fullURL string) string
-	Get(id string) (string, error)
+	InsertURL(fullURL string) string
+	GetFullURL(shortURL string) (string, error)
+	GetShortURL(fullURL string) (*ShortURL, error)
 }
 
 type MapStorage struct {
@@ -28,7 +38,7 @@ func NewMapStorage() *MapStorage {
 	}
 }
 
-func (s *MapStorage) Insert(fullURL string) string {
+func (s *MapStorage) InsertURL(fullURL string) string {
 	//пока код не имеет значения
 	s.Lock()
 	s.Counter++
@@ -41,7 +51,7 @@ func (s *MapStorage) Insert(fullURL string) string {
 	return url.Short
 }
 
-func (s *MapStorage) Get(shortURL string) (string, error) {
+func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
 	//пока код не имеет значения
 	for _, element := range s.Data {
 		if element.Short == shortURL {
@@ -49,4 +59,14 @@ func (s *MapStorage) Get(shortURL string) (string, error) {
 		}
 	}
 	return "", errors.New("wrong id")
+}
+
+func (s *MapStorage) GetShortURL(fullURL string) (*ShortURL, error) {
+	//пока код не имеет значения
+	for _, element := range s.Data {
+		if element.Full == fullURL {
+			return &ShortURL{element.Short}, nil
+		}
+	}
+	return nil, errors.New("wrong URL")
 }
