@@ -46,12 +46,13 @@ func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 }
 
 func (h *BaseHandler) GetShortURL(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json")
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "")
 		return
 	}
-	
+
 	var fullURL storage.FullURL
 	err = json.Unmarshal(body, &fullURL)
 	if err != nil {
@@ -64,7 +65,6 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 	if err != nil {
 		c.String(http.StatusNotFound, "")
 	} else {
-		c.Writer.Header().Set("Content-Type", "application/json")
 		body, err := json.Marshal(shortURL)
 		if err != nil {
 			panic(err)
