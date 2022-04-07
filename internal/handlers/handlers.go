@@ -61,16 +61,21 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 	}
 
 	var shortURL *storage.ShortURL
+	var resStatus int
 	shortURL, err = h.storage.GetShortURL(fullURL.Full)
 	if err != nil {
-		c.String(http.StatusNotFound, "")
+		//тогда создадим
+		strURL := h.storage.InsertURL(string(fullURL.Full))
+		shortURL = &storage.ShortURL{strURL}
+		resStatus = http.StatusCreated
 	} else {
-		body, err := json.Marshal(shortURL)
-		if err != nil {
-			panic(err)
-		}
-		c.String(http.StatusOK, string(body))
+		resStatus = http.StatusOK
 	}
+	body, err = json.Marshal(shortURL)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "")
+	}
+	c.String(resStatus, string(body))
 }
 
 func (h *BaseHandler) ResponseBadRequest(c *gin.Context) {

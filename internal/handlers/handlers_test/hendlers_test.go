@@ -241,15 +241,15 @@ func TestBaseHandler_GetShortURL(t *testing.T) {
 		{
 			name: "Test getShortURL no entry",
 			fields: fields{
-				body: []string{testURL1, testURL2},
+				body: []string{testURL1},
 			},
 			args: args{
-				body:    testURL3JSON,
-				trueVal: false,
+				body:    testURL2JSON,
+				trueVal: true,
 			},
 			want: want{
-				body: "",
-				code: http.StatusNotFound,
+				body: testShortURL2JSON,
+				code: http.StatusCreated,
 			},
 		},
 		{
