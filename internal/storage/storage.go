@@ -65,7 +65,9 @@ func (s *MapStorage) GetShortURL(fullURL string) (*ShortURL, error) {
 	//пока код не имеет значения
 	for _, element := range s.Data {
 		if element.Full == fullURL {
-			return &ShortURL{element.Short}, nil
+			return &ShortURL{
+				Short: element.Short,
+			}, nil
 		}
 	}
 	return nil, errors.New("wrong URL")

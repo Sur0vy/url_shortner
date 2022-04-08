@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type Handle interface {
@@ -30,6 +31,10 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 		c.String(http.StatusNotFound, "")
 	} else {
 		c.Status(http.StatusTemporaryRedirect)
+		if !strings.HasPrefix(fullURL, httpPrefConst) {
+			fullURL := strings.TrimPrefix(fullURL, "//")
+			fullURL = httpPrefConst + fullURL
+		}
 		c.Writer.Header().Set("Location", fullURL)
 	}
 }
@@ -40,7 +45,7 @@ func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 	if err != nil {
 		shortURL = ""
 	}
-	shortURL = "http://localhost:8080/" + h.storage.InsertURL(string(fullURL))
+	shortURL = localHostConst + h.storage.InsertURL(string(fullURL))
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.String(http.StatusCreated, shortURL)
 }
@@ -66,7 +71,9 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 	if err != nil {
 		//тогда создадим
 		strURL := h.storage.InsertURL(string(fullURL.Full))
-		shortURL = &storage.ShortURL{strURL}
+		shortURL = &storage.ShortURL{
+			Short: strURL,
+		}
 		resStatus = http.StatusCreated
 	} else {
 		resStatus = http.StatusOK
