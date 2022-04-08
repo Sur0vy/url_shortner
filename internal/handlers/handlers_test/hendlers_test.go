@@ -18,6 +18,8 @@ const (
 	testURL2JSON string = "{\"url\":\"http://www.blabla.net/11111\"}"
 	testURL3     string = "http://www.rrr.com/wer/ggfsd"
 	testURL4     string = "some text"
+	testURL5     string = "//%2F1/1"
+	testURL5Resp string = "http://%2F1/1"
 
 	testShortURL1     string = "1"
 	testShortURL1JSON string = "{\"result\":\"1\"}"
@@ -157,6 +159,19 @@ func TestHandler_GetFullURL(t *testing.T) {
 			want: want{
 				URL:  "",
 				code: http.StatusNotFound,
+			},
+		},
+		{
+			name: "Test GET without http",
+			fields: fields{
+				body: []string{testURL5},
+			},
+			args: args{
+				id: testShortURL1,
+			},
+			want: want{
+				URL:  testURL5Resp,
+				code: http.StatusTemporaryRedirect,
 			},
 		},
 	}

@@ -32,8 +32,7 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 	} else {
 		c.Status(http.StatusTemporaryRedirect)
 		if !strings.HasPrefix(fullURL, httpPrefConst) {
-			fullURL := strings.TrimPrefix(fullURL, "//")
-			fullURL = httpPrefConst + fullURL
+			fullURL = httpPrefConst + strings.TrimPrefix(fullURL, "//")
 		}
 		c.Writer.Header().Set("Location", fullURL)
 	}
