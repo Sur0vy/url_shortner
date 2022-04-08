@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/Sur0vy/url_shortner.git/internal/server"
 )
 
 func main() {
-	const port = ":8080"
-	server.SetupServer().Run(port)
+	config.Params = *config.SetupConfig()
+	server.SetupServer().Run(config.Params.ServerAddress)
 }

@@ -2,6 +2,7 @@ package hendlers_test
 
 import (
 	"bytes"
+	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/Sur0vy/url_shortner.git/internal/handlers"
 	"github.com/Sur0vy/url_shortner.git/internal/server"
 	"github.com/Sur0vy/url_shortner.git/internal/storage"
@@ -174,8 +175,22 @@ func TestHandler_GetFullURL(t *testing.T) {
 				code: http.StatusTemporaryRedirect,
 			},
 		},
+		{
+			name: "Test GET several of the same",
+			fields: fields{
+				body: []string{testURL1, testURL1, testURL5},
+			},
+			args: args{
+				id: testShortURL1,
+			},
+			want: want{
+				URL:  testURL1,
+				code: http.StatusTemporaryRedirect,
+			},
+		},
 	}
 
+	config.Params = *config.SetupConfig()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := server.SetupServer()

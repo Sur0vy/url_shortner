@@ -1,6 +1,7 @@
-package handlers
+package config
 
 const (
-	localHostConst string = "http://localhost:8080/"
-	httpPrefConst  string = "http://"
+	HTTPPref      string = "http://"
+	ServerAddress string = "8080"
+	LocalHost            = "http://localhost:" + ServerAddress + "/"
 )
