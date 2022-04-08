@@ -13,17 +13,16 @@ import (
 
 const (
 	testURL1     string = "http://www.blabla.net/blablabla"
-	testURL1JSON        = "{\"url\":\"http://www.blabla.net/blablabla\"}"
-	testURL2            = "http://www.blabla.net/11111"
-	testURL2JSON        = "{\"url\":\"http://www.blabla.net/11111\"}"
-	testURL3            = "http://www.rrr.com/wer/ggfsd"
-	testURL3JSON        = "{\"url\":\"http://www.rrr.com/wer/ggfsd\"}"
-	testURL4            = "some text"
+	testURL1JSON string = "{\"url\":\"http://www.blabla.net/blablabla\"}"
+	testURL2     string = "http://www.blabla.net/11111"
+	testURL2JSON string = "{\"url\":\"http://www.blabla.net/11111\"}"
+	testURL3     string = "http://www.rrr.com/wer/ggfsd"
+	testURL4     string = "some text"
 
-	testShortURL1     = "1"
-	testShortURL1JSON = "{\"result\":\"1\"}"
-	testShortURL2     = "2"
-	testShortURL2JSON = "{\"result\":\"2\"}"
+	testShortURL1     string = "1"
+	testShortURL1JSON string = "{\"result\":\"1\"}"
+	testShortURL2     string = "2"
+	testShortURL2JSON string = "{\"result\":\"2\"}"
 
 	prefURL = "http://localhost:8080/"
 )
