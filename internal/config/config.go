@@ -20,7 +20,7 @@ func newEnvConfig() *EnvConfig {
 
 func SetupConfig() *EnvConfig {
 	c := newEnvConfig()
-	err := env.Parse(&c)
+	err := env.Parse(c)
 	if err != nil {
 		c.ServerAddress = ServerAddress
 		c.BaseURL = HTTPPref
