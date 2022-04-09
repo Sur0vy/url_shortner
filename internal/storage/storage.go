@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"strconv"
 	"sync"
 )
@@ -44,7 +45,8 @@ func (s *MapStorage) InsertURL(fullURL string) string {
 	s.Counter++
 	var url = URL{
 		Full:  fullURL,
-		Short: strconv.Itoa(s.Counter),
+		Short: config.HTTPPref + "/" + strconv.Itoa(s.Counter),
+		//Short: strconv.Itoa(s.Counter),
 	}
 	s.Data[s.Counter] = url
 	s.Unlock()
@@ -54,7 +56,7 @@ func (s *MapStorage) InsertURL(fullURL string) string {
 func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
 	//пока код не имеет значения
 	for _, element := range s.Data {
-		if element.Short == shortURL {
+		if element.Short == config.HTTPPref+"/"+shortURL {
 			return element.Full, nil
 		}
 	}

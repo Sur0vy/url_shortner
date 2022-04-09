@@ -24,9 +24,9 @@ const (
 	testURL5Resp string = "http://%2F1/1"
 
 	testShortURL1     string = "1"
-	testShortURL1JSON string = "{\"result\":\"1\"}"
+	testShortURL1JSON string = "{\"result\":\"http://localhost:8080/1\"}"
 	testShortURL2     string = "2"
-	testShortURL2JSON string = "{\"result\":\"2\"}"
+	testShortURL2JSON string = "{\"result\":\"http://localhost:8080/2\"}"
 )
 
 func TestHandler_CreateShortURL(t *testing.T) {

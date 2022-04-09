@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -28,7 +29,7 @@ func TestMapStorage_GetFullURL(t *testing.T) {
 				data: map[int]URL{
 					1: {
 						Full:  "www.blabla.ru",
-						Short: "1",
+						Short: config.HTTPPref + "/" + "1",
 					},
 				},
 			},
@@ -89,8 +90,8 @@ func TestMapStorage_InsertURL(t *testing.T) {
 				counter: 1,
 				data: map[int]URL{
 					1: {
-						Full:  "www.blabla.ru",
-						Short: "1",
+						Full:  "http://www.blabla.net/blablabla",
+						Short: "http://localhost:8080/1",
 					},
 				},
 			},

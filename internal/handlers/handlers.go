@@ -51,7 +51,8 @@ func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 	if err != nil {
 		shortURL = ""
 	}
-	shortURL = config.HTTPPref + "/" + h.storage.InsertURL(string(fullURL))
+	//shortURL = config.HTTPPref + "/" + h.storage.InsertURL(string(fullURL))
+	shortURL = h.storage.InsertURL(string(fullURL))
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.String(http.StatusCreated, shortURL)
 }
