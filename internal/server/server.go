@@ -10,6 +10,7 @@ func SetupServer() *gin.Engine {
 	memoryStorage := storage.NewMapStorage()
 	handler := handlers.NewBaseHandler(memoryStorage)
 
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	router.GET("/:id", handler.GetFullURL)
 	router.POST("/", handler.CreateShortURL)
