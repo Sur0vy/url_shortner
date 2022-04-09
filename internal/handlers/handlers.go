@@ -65,25 +65,21 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 	err = json.Unmarshal(body, &fullURL)
 	if err != nil {
 		fmt.Printf("\tError: no full URL")
-
 		c.String(http.StatusBadRequest, "")
 		return
 	}
 
-	fmt.Printf("\tfull URL = %s\n", body)
+	fmt.Printf("\tfull URL = %s\n", fullURL.Full)
 	var shortURL *storage.ShortURL
 	var resStatus int
 	shortURL, err = h.storage.GetShortURL(fullURL.Full)
 	if err != nil {
-		//fmt.Printf("\tError: no short URL, creating\n")
-		//strURL := h.storage.InsertURL(string(fullURL.Full))
-		//shortURL = &storage.ShortURL{
-		//	Short: strURL,
-		//}
-		//resStatus = http.StatusCreated
-		fmt.Printf("\tError: no short URL\n")
-		c.Writer.WriteHeader(http.StatusNotFound)
-		return
+		fmt.Printf("\tError: no short URL, creating\n")
+		strURL := h.storage.InsertURL(fullURL.Full)
+		shortURL = &storage.ShortURL{
+			Short: strURL,
+		}
+		resStatus = http.StatusCreated
 	} else {
 		resStatus = http.StatusOK
 		//resStatus = http.StatusCreated

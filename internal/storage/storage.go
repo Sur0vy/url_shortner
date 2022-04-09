@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"strconv"
 	"sync"
@@ -46,8 +47,8 @@ func (s *MapStorage) InsertURL(fullURL string) string {
 	var url = URL{
 		Full:  fullURL,
 		Short: config.HTTPPref + "/" + strconv.Itoa(s.Counter),
-		//Short: strconv.Itoa(s.Counter),
 	}
+	fmt.Printf("\t Add new URL to storage = %s\n", url)
 	s.Data[s.Counter] = url
 	s.Unlock()
 	return url.Short
@@ -56,10 +57,13 @@ func (s *MapStorage) InsertURL(fullURL string) string {
 func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
 	//пока код не имеет значения
 	for _, element := range s.Data {
-		if element.Short == config.HTTPPref+"/"+shortURL {
+		exShortURL := config.HTTPPref + "/" + shortURL
+		if element.Short == exShortURL {
+			fmt.Printf("\t Get full URL from storage. short = %s ; full = %s\n", exShortURL, element.Full)
 			return element.Full, nil
 		}
 	}
+	fmt.Printf("\t No URL in storage: %s\n", shortURL)
 	return "", errors.New("wrong id")
 }
 
@@ -67,10 +71,12 @@ func (s *MapStorage) GetShortURL(fullURL string) (*ShortURL, error) {
 	//пока код не имеет значения
 	for _, element := range s.Data {
 		if element.Full == fullURL {
+			fmt.Printf("\t Get short URL from storage. full = %s ; short = %s\n", fullURL, element.Short)
 			return &ShortURL{
 				Short: element.Short,
 			}, nil
 		}
 	}
+	fmt.Printf("\t No URL in storage: %s\n", fullURL)
 	return nil, errors.New("wrong URL")
 }
