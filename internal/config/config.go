@@ -13,17 +13,13 @@ type EnvConfig struct {
 
 func newEnvConfig() *EnvConfig {
 	return &EnvConfig{
-		ServerAddress: "",
-		BaseURL:       "",
+		ServerAddress: ServerAddress,
+		BaseURL:       HTTPPref,
 	}
 }
 
 func SetupConfig() *EnvConfig {
 	c := newEnvConfig()
-	err := env.Parse(c)
-	if err != nil {
-		c.ServerAddress = ServerAddress
-		c.BaseURL = HTTPPref
-	}
+	env.Parse(c)
 	return c
 }
