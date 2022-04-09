@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/Sur0vy/url_shortner.git/internal/storage"
 	"github.com/gin-gonic/gin"
@@ -26,17 +27,21 @@ func NewBaseHandler(storage storage.Storage) *BaseHandler {
 }
 
 func (h *BaseHandler) GetFullURL(c *gin.Context) {
+	fmt.Println(c)
 	shortURL := c.Param("id")
 	fullURL, err := h.storage.GetFullURL(shortURL)
 	if err != nil {
-		c.String(http.StatusNotFound, "")
+		//c.String(http.StatusNotFound, "")
+		c.Writer.WriteHeader(http.StatusNotFound)
+		return
 	} else {
-		c.Status(http.StatusTemporaryRedirect)
-		//c.Status(200)
+		//c.Status(http.StatusTemporaryRedirect)
+		c.Status(200)
 		if !strings.HasPrefix(fullURL, config.HTTP) {
 			fullURL = config.HTTP + strings.TrimPrefix(fullURL, "//")
 		}
-		c.Writer.Header().Set("Location", fullURL)
+		//c.Writer.Header().Set("Location", fullURL)
+		c.Redirect(http.StatusTemporaryRedirect, fullURL)
 	}
 }
 
@@ -47,7 +52,6 @@ func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 		shortURL = ""
 	}
 	shortURL = config.HTTPPref + "/" + h.storage.InsertURL(string(fullURL))
-	//shortURL = h.storage.InsertURL(string(fullURL))
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.String(http.StatusCreated, shortURL)
 }
