@@ -33,8 +33,8 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 	} else {
 		c.Status(http.StatusTemporaryRedirect)
 		//c.Status(200)
-		if !strings.HasPrefix(fullURL, config.Params.BaseURL) {
-			fullURL = config.Params.BaseURL + strings.TrimPrefix(fullURL, "//")
+		if !strings.HasPrefix(fullURL, config.HTTP) {
+			fullURL = config.HTTP + strings.TrimPrefix(fullURL, "//")
 		}
 		c.Writer.Header().Set("Location", fullURL)
 	}
@@ -46,7 +46,8 @@ func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 	if err != nil {
 		shortURL = ""
 	}
-	shortURL = config.LocalHost + h.storage.InsertURL(string(fullURL))
+	shortURL = config.HTTPPref + "/" + h.storage.InsertURL(string(fullURL))
+	//shortURL = h.storage.InsertURL(string(fullURL))
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.String(http.StatusCreated, shortURL)
 }

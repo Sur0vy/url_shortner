@@ -1,7 +1,7 @@
 package config
 
 const (
-	HTTPPref      string = "http://"
-	ServerAddress string = "8080"
-	LocalHost            = "http://localhost:" + ServerAddress + "/"
+	HTTPPref      string = "http://localhost:8080"
+	ServerAddress string = "localhost:8080"
+	HTTP          string = "http://"
 )

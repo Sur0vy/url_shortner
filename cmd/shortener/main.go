@@ -7,5 +7,5 @@ import (
 
 func main() {
 	config.Params = *config.SetupConfig()
-	server.SetupServer().Run(":" + config.Params.ServerAddress)
+	server.SetupServer().Run(config.Params.ServerAddress)
 }

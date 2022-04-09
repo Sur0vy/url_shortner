@@ -2,6 +2,7 @@ package hendlers_test
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/Sur0vy/url_shortner.git/internal/handlers"
 	"github.com/Sur0vy/url_shortner.git/internal/server"
@@ -26,8 +27,6 @@ const (
 	testShortURL1JSON string = "{\"result\":\"1\"}"
 	testShortURL2     string = "2"
 	testShortURL2JSON string = "{\"result\":\"2\"}"
-
-	prefURL = "http://localhost:8080/"
 )
 
 func TestHandler_CreateShortURL(t *testing.T) {
@@ -51,7 +50,7 @@ func TestHandler_CreateShortURL(t *testing.T) {
 				trueVal: true,
 			},
 			want: want{
-				body: prefURL + testShortURL1,
+				body: testShortURL1,
 				code: http.StatusCreated,
 			},
 		},
@@ -62,11 +61,12 @@ func TestHandler_CreateShortURL(t *testing.T) {
 				trueVal: false,
 			},
 			want: want{
-				body: prefURL + testShortURL2,
+				body: testShortURL2,
 				code: http.StatusCreated,
 			},
 		},
 	}
+	config.Params = *config.SetupConfig()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := server.SetupServer()
@@ -83,11 +83,11 @@ func TestHandler_CreateShortURL(t *testing.T) {
 			assert.Equal(t, w.Code, tt.want.code)
 
 			if tt.args.trueVal {
-				body = bytes.NewBuffer([]byte(tt.want.body))
-				assert.Equal(t, w.Body, body)
+				body = bytes.NewBuffer([]byte(config.Params.BaseURL + "/" + tt.want.body))
+				assert.Equal(t, fmt.Sprint(w.Body), fmt.Sprint(body))
 			} else {
-				body = bytes.NewBuffer([]byte(tt.want.body))
-				assert.NotEqual(t, w.Body, body)
+				body = bytes.NewBuffer([]byte(config.Params.BaseURL + tt.want.body))
+				assert.NotEqual(t, fmt.Sprint(w.Body), fmt.Sprint(body))
 			}
 		})
 	}
