@@ -31,27 +31,19 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 	shortURL := c.Param("id")
 	fullURL, err := h.storage.GetFullURL(shortURL)
 	if err != nil {
-		//c.String(http.StatusNotFound, "")
 		c.Writer.WriteHeader(http.StatusNotFound)
 		return
 	} else {
-		//c.Status(http.StatusTemporaryRedirect)
-		c.Status(200)
 		if !strings.HasPrefix(fullURL, config.HTTP) {
 			fullURL = config.HTTP + strings.TrimPrefix(fullURL, "//")
 		}
-		//c.Writer.Header().Set("Location", fullURL)
 		c.Redirect(http.StatusTemporaryRedirect, fullURL)
 	}
 }
 
 func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 	var shortURL string
-	fullURL, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		shortURL = ""
-	}
-	//shortURL = config.HTTPPref + "/" + h.storage.InsertURL(string(fullURL))
+	fullURL, _ := ioutil.ReadAll(c.Request.Body)
 	shortURL = h.storage.InsertURL(string(fullURL))
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.String(http.StatusCreated, shortURL)
@@ -84,6 +76,7 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 		resStatus = http.StatusCreated
 	} else {
 		resStatus = http.StatusOK
+		//resStatus = http.StatusCreated
 	}
 	body, err = json.Marshal(shortURL)
 	if err != nil {
