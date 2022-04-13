@@ -131,7 +131,7 @@ func (s *MapStorage) addToFile(URLItem *URL) error {
 	}
 
 	writer := bufio.NewWriter(file)
-	// записываем событие в буфер
+	// записываем URL в буфер
 	if _, err := writer.Write(data); err != nil {
 		return err
 	}
