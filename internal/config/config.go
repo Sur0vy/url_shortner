@@ -24,7 +24,7 @@ func SetupConfig() *EnvConfig {
 	c := newEnvConfig()
 	env.Parse(c)
 	if len(c.StoragePath) > 0 {
-		c.StoragePath = c.StoragePath + "/URL.str"
+		c.StoragePath = c.StoragePath
 	}
 	return c
 }

@@ -115,7 +115,6 @@ func (s *MapStorage) Load(fileName string) error {
 			s.Unlock()
 		}
 	}
-	return nil
 }
 
 func (s *MapStorage) addToFile(URLItem *URL) error {
@@ -143,6 +142,4 @@ func (s *MapStorage) addToFile(URLItem *URL) error {
 
 	// записываем буфер в файл
 	return writer.Flush()
-
-	return nil
 }
