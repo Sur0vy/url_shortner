@@ -236,6 +236,7 @@ func TestMapStorage_Load(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			file, _ := os.OpenFile(tt.args.fileName, os.O_RDWR|os.O_CREATE, 0777)
+			defer os.Remove(tt.args.fileName)
 			writer := bufio.NewWriter(file)
 			for _, data := range tt.args.data {
 				writer.WriteString(data + "\n")
@@ -245,14 +246,106 @@ func TestMapStorage_Load(t *testing.T) {
 			ms := NewMapStorage()
 			ms.Load(tt.args.fileName)
 
-			for _, data := range tt.want.url {
-				ShortURL, err := ms.GetShortURL(data.Full)
+			for _, item := range tt.want.url {
+				ShortURL, err := ms.GetShortURL(item.Full)
 				assert.Nil(t, err)
 				if err == nil {
-					assert.Equal(t, data.Short, ShortURL.Short)
+					assert.Equal(t, item.Short, ShortURL.Short)
 				}
 			}
-			os.Remove(tt.args.fileName)
+		})
+	}
+}
+
+func TestMapStorage_addToFile(t *testing.T) {
+	type args struct {
+		fileName string
+		data     map[int]URL
+	}
+	type fields struct {
+		url map[int]URL
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    fields
+		wantErr bool
+	}{
+		{
+			name: "Test add to file 2 item write/read",
+			args: args{
+				fileName: "\test.txt",
+				data: map[int]URL{
+					1: {
+						Full:  "http://www.werewrewr.com/f7",
+						Short: "http://localhost:8080/1",
+					},
+					2: {
+						Full:  "http://www.werewrewr.com/f7/saf",
+						Short: "http://localhost:8080/2",
+					},
+				},
+			},
+			want: fields{
+				url: map[int]URL{
+					1: {
+						Full:  "http://www.werewrewr.com/f7",
+						Short: "http://localhost:8080/1",
+					},
+					2: {
+						Full:  "http://www.werewrewr.com/f7/saf",
+						Short: "http://localhost:8080/2",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test add to file no URL",
+			args: args{
+				fileName: "\test.txt",
+				data: map[int]URL{
+					1: {
+						Full:  "http://www.werewrewr.com/f7/saf",
+						Short: "http://localhost:8080/1",
+					},
+				},
+			},
+			want: fields{
+				url: map[int]URL{
+					1: {
+						Full:  "http://www.werewrewr.com/f7",
+						Short: "http://localhost:8080/1",
+					},
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ms := NewMapStorage()
+			ms.Load(tt.args.fileName)
+			defer os.Remove(tt.args.fileName)
+			for _, item := range tt.args.data {
+				ms.addToFile(&item)
+			}
+
+			ms2 := NewMapStorage()
+			ms2.Load(tt.args.fileName)
+
+			for _, data := range tt.want.url {
+				ShortURL, err := ms2.GetShortURL(data.Full)
+				if tt.wantErr == false {
+					assert.Nil(t, err)
+					if err == nil {
+						assert.Equal(t, data.Short, ShortURL.Short)
+					}
+				} else {
+					assert.NotNil(t, err)
+				}
+			}
+			defer os.Remove(tt.args.fileName)
 		})
 	}
 }

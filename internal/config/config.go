@@ -23,8 +23,5 @@ func newEnvConfig() *EnvConfig {
 func SetupConfig() *EnvConfig {
 	c := newEnvConfig()
 	env.Parse(c)
-	if len(c.StoragePath) > 0 {
-		c.StoragePath = c.StoragePath
-	}
 	return c
 }
