@@ -1,9 +1,12 @@
 package storage
 
 import (
+	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Sur0vy/url_shortner.git/internal/config"
+	"os"
 	"strconv"
 	"sync"
 )
@@ -25,11 +28,13 @@ type Storage interface {
 	InsertURL(fullURL string) string
 	GetFullURL(shortURL string) (string, error)
 	GetShortURL(fullURL string) (*ShortURL, error)
+	Load(fileName string) error
 }
 
 type MapStorage struct {
-	Counter int
-	Data    map[int]URL
+	Counter         int
+	Data            map[int]URL
+	fileStorageName string
 	sync.Mutex
 }
 
@@ -44,14 +49,17 @@ func (s *MapStorage) InsertURL(fullURL string) string {
 	//пока код не имеет значения
 	s.Lock()
 	s.Counter++
-	var url = URL{
+	var URLItem = URL{
 		Full:  fullURL,
 		Short: config.HTTPPref + "/" + strconv.Itoa(s.Counter),
 	}
-	fmt.Printf("\t Add new URL to storage = %s\n", url)
-	s.Data[s.Counter] = url
+	fmt.Printf("\t Add new URL to storage = %s\n", URLItem)
+	s.Data[s.Counter] = URLItem
+	if len(s.fileStorageName) > 0 {
+		s.addToFile(&URLItem)
+	}
 	s.Unlock()
-	return url.Short
+	return URLItem.Short
 }
 
 func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
@@ -79,4 +87,62 @@ func (s *MapStorage) GetShortURL(fullURL string) (*ShortURL, error) {
 	}
 	fmt.Printf("\t No URL in storage: %s\n", fullURL)
 	return nil, errors.New("wrong URL")
+}
+
+func (s *MapStorage) Load(fileName string) error {
+	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
+	if err != nil {
+		return err
+	}
+	s.fileStorageName = fileName
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	for {
+		if !scanner.Scan() {
+			return scanner.Err()
+		}
+		// читаем данные из scanner
+		data := scanner.Bytes()
+		URLItem := URL{}
+		err = json.Unmarshal(data, &URLItem)
+		if err == nil {
+			s.Lock()
+			s.Counter++
+			fmt.Printf("\t Load URL to storage = %s from file %s\n", URLItem, fileName)
+			s.Data[s.Counter] = URLItem
+			s.Unlock()
+		}
+	}
+	return nil
+}
+
+func (s *MapStorage) addToFile(URLItem *URL) error {
+	file, err := os.OpenFile(s.fileStorageName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	data, err := json.Marshal(&URLItem)
+	if err != nil {
+		return err
+	}
+
+	writer := bufio.NewWriter(file)
+	// записываем событие в буфер
+	if _, err := writer.Write(data); err != nil {
+		return err
+	}
+
+	// добавляем перенос строки
+	if err := writer.WriteByte('\n'); err != nil {
+		return err
+	}
+
+	// записываем буфер в файл
+	return writer.Flush()
+
+	return nil
 }
