@@ -3,7 +3,6 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/caarlos0/env/v6"
 	"os"
 )
 
@@ -23,18 +22,19 @@ func newEnvConfig() *EnvConfig {
 	}
 }
 
-func SetupConfig() *EnvConfig {
+func SetupConfig(defaultParams bool) *EnvConfig {
 	c := newEnvConfig()
-	env.Parse(c)
-	c.readFlags()
+	if defaultParams == false {
+		c.readParams()
+	}
 	return c
 }
 
-func (c *EnvConfig) readFlags() {
+func (c *EnvConfig) readParams() {
 	args := os.Args
 	fmt.Printf("All arguments: %v\n", args)
-	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "host to listen on")
-	flag.StringVar(&c.BaseURL, "b", c.BaseURL, "base address")
-	flag.StringVar(&c.StoragePath, "f", c.StoragePath, "path to storage file")
+	flag.StringVar(&c.ServerAddress, "a", os.Getenv("SERVER_ADDRESS"), "host to listen on")
+	flag.StringVar(&c.BaseURL, "b", os.Getenv("BASE_URL"), "base address")
+	flag.StringVar(&c.StoragePath, "f", os.Getenv("FILE_STORAGE_PATH"), "path to storage file")
 	flag.Parse()
 }
