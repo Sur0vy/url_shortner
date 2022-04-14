@@ -31,7 +31,7 @@ func TestMapStorage_GetFullURL(t *testing.T) {
 				data: map[int]URL{
 					1: {
 						Full:  "www.blabla.ru",
-						Short: config.HTTPPref + "/" + "1",
+						Short: config.HTTP + config.HostAddr + ":" + config.HostPort + "/" + "1",
 					},
 				},
 			},
@@ -59,6 +59,7 @@ func TestMapStorage_GetFullURL(t *testing.T) {
 			wantErr: true,
 		},
 	}
+	//config.HostAddr =
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &MapStorage{

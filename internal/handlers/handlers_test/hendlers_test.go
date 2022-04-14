@@ -83,8 +83,8 @@ func TestHandler_CreateShortURL(t *testing.T) {
 			assert.Equal(t, w.Code, tt.want.code)
 
 			if tt.args.trueVal {
-				body = bytes.NewBuffer([]byte(config.Params.BaseURL + "/" + tt.want.body))
-				assert.Equal(t, fmt.Sprint(w.Body), fmt.Sprint(body))
+				body = bytes.NewBuffer([]byte(config.HTTP + config.Params.BaseURL + "/" + tt.want.body))
+				assert.Equal(t, fmt.Sprint(body), fmt.Sprint(w.Body))
 			} else {
 				body = bytes.NewBuffer([]byte(config.Params.BaseURL + tt.want.body))
 				assert.NotEqual(t, fmt.Sprint(w.Body), fmt.Sprint(body))

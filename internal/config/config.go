@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	"os"
+	"strings"
 )
 
 var Params EnvConfig
@@ -17,8 +18,8 @@ type EnvConfig struct {
 
 func newEnvConfig() *EnvConfig {
 	return &EnvConfig{
-		ServerAddress: ServerAddress,
-		BaseURL:       HTTPPref,
+		ServerAddress: HostAddr + ":" + HostPort,
+		BaseURL:       HostAddr + ":" + HostPort,
 		StoragePath:   "",
 	}
 }
@@ -39,4 +40,13 @@ func (c *EnvConfig) readParams() {
 	flag.StringVar(&c.BaseURL, "b", c.BaseURL, "base address")
 	flag.StringVar(&c.StoragePath, "f", c.StoragePath, "path to storage file")
 	flag.Parse()
+}
+
+func (c *EnvConfig) BasePort() string {
+	part := strings.Split(c.BaseURL, ":")
+	if len(part) > 1 {
+		return part[1]
+	} else {
+		return HostPort
+	}
 }
