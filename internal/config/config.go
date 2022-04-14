@@ -1,7 +1,10 @@
 package config
 
 import (
+	"flag"
+	"fmt"
 	"github.com/caarlos0/env/v6"
+	"os"
 )
 
 var Params EnvConfig
@@ -23,5 +26,15 @@ func newEnvConfig() *EnvConfig {
 func SetupConfig() *EnvConfig {
 	c := newEnvConfig()
 	env.Parse(c)
+	c.readFlags()
 	return c
+}
+
+func (c *EnvConfig) readFlags() {
+	args := os.Args
+	fmt.Printf("All arguments: %v\n", args)
+	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "host to listen on")
+	flag.StringVar(&c.BaseURL, "b", c.BaseURL, "base address")
+	flag.StringVar(&c.StoragePath, "f", c.StoragePath, "path to storage file")
+	flag.Parse()
 }

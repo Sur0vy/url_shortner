@@ -31,11 +31,11 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 	fmt.Printf("GetFullURL: short URL(param) = %s\n", shortURL)
 	fullURL, err := h.storage.GetFullURL(shortURL)
 	if err != nil {
-		fmt.Printf("\t Error: no full url")
+		fmt.Printf("\tError: no full url")
 		c.Writer.WriteHeader(http.StatusNotFound)
 		return
 	} else {
-		fmt.Printf("\t full URL = %s\n", fullURL)
+		fmt.Printf("\tfull URL = %s\n", fullURL)
 		if !strings.HasPrefix(fullURL, config.HTTP) {
 			fullURL = config.HTTP + strings.TrimPrefix(fullURL, "//")
 		}
