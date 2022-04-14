@@ -325,7 +325,6 @@ func TestBaseHandler_GetShortURL(t *testing.T) {
 
 			r := httptest.NewRecorder()
 
-			//body := bytes.NewBuffer([]byte(tt.args.body))
 			req, err := http.NewRequest("POST", "/api/shorten", bytes.NewBuffer([]byte(tt.args.body)))
 			s.ServeHTTP(r, req)
 
