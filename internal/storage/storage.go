@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"os"
 	"strconv"
 	"sync"
@@ -51,7 +50,8 @@ func (s *MapStorage) InsertURL(fullURL string) string {
 	s.Counter++
 	var URLItem = URL{
 		Full:  fullURL,
-		Short: config.HTTP + config.HostAddr + ":" + config.Params.BasePort() + "/" + strconv.Itoa(s.Counter),
+		Short: strconv.Itoa(s.Counter),
+		//Short: config.HTTP + config.HostAddr + ":" + config.Params.BasePort() + "/" + strconv.Itoa(s.Counter),
 	}
 	fmt.Printf("\tAdd new URL to storage = %s\n", URLItem)
 	s.Data[s.Counter] = URLItem
@@ -65,9 +65,9 @@ func (s *MapStorage) InsertURL(fullURL string) string {
 func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
 	//пока код не имеет значения
 	for _, element := range s.Data {
-		exShortURL := config.HTTP + config.HostAddr + ":" + config.HostPort + "/" + shortURL
-		if element.Short == exShortURL {
-			fmt.Printf("\tGet full URL from storage. short = %s ; full = %s\n", exShortURL, element.Full)
+		//exShortURL := config.HTTP + config.HostAddr + ":" + config.HostPort + "/" + shortURL
+		if element.Short == shortURL {
+			fmt.Printf("\tGet full URL from storage. short = %s ; full = %s\n", element.Short, element.Full)
 			return element.Full, nil
 		}
 	}

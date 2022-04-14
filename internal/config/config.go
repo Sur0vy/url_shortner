@@ -44,8 +44,9 @@ func (c *EnvConfig) readParams() {
 
 func (c *EnvConfig) BasePort() string {
 	part := strings.Split(c.BaseURL, ":")
-	if len(part) > 1 {
-		return part[1]
+	cnt := len(part)
+	if cnt > 1 {
+		return part[cnt-1]
 	} else {
 		return HostPort
 	}

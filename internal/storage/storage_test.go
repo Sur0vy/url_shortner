@@ -2,7 +2,6 @@ package storage
 
 import (
 	"bufio"
-	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -31,7 +30,7 @@ func TestMapStorage_GetFullURL(t *testing.T) {
 				data: map[int]URL{
 					1: {
 						Full:  "www.blabla.ru",
-						Short: config.HTTP + config.HostAddr + ":" + config.HostPort + "/" + "1",
+						Short: "1",
 					},
 				},
 			},
@@ -59,7 +58,6 @@ func TestMapStorage_GetFullURL(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	//config.HostAddr =
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &MapStorage{
@@ -94,7 +92,7 @@ func TestMapStorage_InsertURL(t *testing.T) {
 				data: map[int]URL{
 					1: {
 						Full:  "http://www.blabla.net/blablabla",
-						Short: "http://localhost:8080/1",
+						Short: "1",
 					},
 				},
 			},
@@ -225,10 +223,12 @@ func TestMapStorage_Load(t *testing.T) {
 					1: {
 						Full:  "http://www.werewrewr.com/f7",
 						Short: "http://localhost:8080/1",
+						//Short: "1",
 					},
 					2: {
 						Full:  "http://www.werewrewr.com/f7/saf",
 						Short: "http://localhost:8080/2",
+						//Short: "2",
 					},
 				},
 			},
@@ -278,24 +278,28 @@ func TestMapStorage_addToFile(t *testing.T) {
 				fileName: "\test.txt",
 				data: map[int]URL{
 					1: {
-						Full:  "http://www.werewrewr.com/f7",
-						Short: "http://localhost:8080/1",
+						Full: "http://www.werewrewr.com/f7",
+						//Short: "http://localhost:8080/1",
+						Short: "1",
 					},
 					2: {
-						Full:  "http://www.werewrewr.com/f7/saf",
-						Short: "http://localhost:8080/2",
+						Full: "http://www.werewrewr.com/f7/saf",
+						//Short: "http://localhost:8080/2",
+						Short: "2",
 					},
 				},
 			},
 			want: fields{
 				url: map[int]URL{
 					1: {
-						Full:  "http://www.werewrewr.com/f7",
-						Short: "http://localhost:8080/1",
+						Full: "http://www.werewrewr.com/f7",
+						//Short: "http://localhost:8080/1",
+						Short: "1",
 					},
 					2: {
-						Full:  "http://www.werewrewr.com/f7/saf",
-						Short: "http://localhost:8080/2",
+						Full: "http://www.werewrewr.com/f7/saf",
+						//Short: "http://localhost:8080/2",
+						Short: "2",
 					},
 				},
 			},
@@ -307,16 +311,18 @@ func TestMapStorage_addToFile(t *testing.T) {
 				fileName: "\test.txt",
 				data: map[int]URL{
 					1: {
-						Full:  "http://www.werewrewr.com/f7/saf",
-						Short: "http://localhost:8080/1",
+						Full: "http://www.werewrewr.com/f7/saf",
+						//Short: "http://localhost:8080/1",
+						Short: "1",
 					},
 				},
 			},
 			want: fields{
 				url: map[int]URL{
 					1: {
-						Full:  "http://www.werewrewr.com/f7",
-						Short: "http://localhost:8080/1",
+						Full: "http://www.werewrewr.com/f7",
+						//Short: "http://localhost:8080/1",
+						Short: "1",
 					},
 				},
 			},

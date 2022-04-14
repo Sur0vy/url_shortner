@@ -48,9 +48,10 @@ func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 	fullURL, _ := ioutil.ReadAll(c.Request.Body)
 	fmt.Printf("CreateShortURL: full URL(body) = %s\n", string(fullURL))
 	shortURL = h.storage.InsertURL(string(fullURL))
-	fmt.Printf("\tShort URL = %s\n", shortURL)
+	exShortURL := storage.ExpandShortURL(shortURL)
+	fmt.Printf("\tShort URL = %s\n", exShortURL)
 	c.Writer.Header().Set("Content-Type", "text/plain")
-	c.String(http.StatusCreated, shortURL)
+	c.String(http.StatusCreated, exShortURL)
 }
 
 func (h *BaseHandler) GetShortURL(c *gin.Context) {
@@ -84,6 +85,7 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 		resStatus = http.StatusOK
 		//resStatus = http.StatusCreated
 	}
+	shortURL.Short = storage.ExpandShortURL(shortURL.Short)
 	fmt.Printf("\tshort URL = %s\n", shortURL.Short)
 	body, err = json.Marshal(shortURL)
 	if err != nil {
