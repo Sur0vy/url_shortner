@@ -27,6 +27,7 @@ func NewBaseHandler(storage storage.Storage) *BaseHandler {
 }
 
 func (h *BaseHandler) GetFullURL(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "text/plain")
 	shortURL := c.Param("id")
 	fmt.Printf("GetFullURL: short URL(param) = %s\n", shortURL)
 	fullURL, err := h.storage.GetFullURL(shortURL)
