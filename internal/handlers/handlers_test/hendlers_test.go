@@ -66,7 +66,7 @@ func TestHandler_CreateShortURL(t *testing.T) {
 			},
 		},
 	}
-	config.Params = *config.SetupConfig(true)
+	config.Params = *config.SetupConfig()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := server.SetupServer()
@@ -190,7 +190,7 @@ func TestHandler_GetFullURL(t *testing.T) {
 		},
 	}
 
-	config.Params = *config.SetupConfig(true)
+	config.Params = *config.SetupConfig()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := server.SetupServer()

@@ -24,11 +24,19 @@ func newEnvConfig() *EnvConfig {
 	}
 }
 
-func SetupConfig(defaultParams bool) *EnvConfig {
-	c := newEnvConfig()
-	if !defaultParams {
+type ConfigOption func(*EnvConfig)
+
+func NotDefaultParams() ConfigOption {
+	return func(c *EnvConfig) {
 		c.readParams()
 		env.Parse(c)
+	}
+}
+
+func SetupConfig(opts ...ConfigOption) *EnvConfig {
+	c := newEnvConfig()
+	for _, opt := range opts {
+		opt(c)
 	}
 	return c
 }
