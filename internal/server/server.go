@@ -5,8 +5,8 @@ import (
 	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/Sur0vy/url_shortner.git/internal/handlers"
 	"github.com/Sur0vy/url_shortner.git/internal/storage"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/nanmu42/gzip"
 )
 
 func SetupServer() *gin.Engine {
@@ -19,8 +19,7 @@ func SetupServer() *gin.Engine {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	//router.Use(gzip.Gzip(gzip.DefaultCompression))
-	router.Use(gzip.DefaultHandler().Gin)
+	router.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithDecompressFn(gzip.DefaultDecompressHandle)))
 	router.GET("/:id", handler.GetFullURL)
 	router.POST("/", handler.CreateShortURL)
 	router.POST("/api/shorten", handler.GetShortURL)
