@@ -66,7 +66,7 @@ func TestHandler_CreateShortURL(t *testing.T) {
 			},
 		},
 	}
-	config.Params = *config.SetupConfig()
+	config.Cnf = *config.SetupConfig()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := server.SetupServer()
@@ -83,10 +83,10 @@ func TestHandler_CreateShortURL(t *testing.T) {
 			assert.Equal(t, w.Code, tt.want.code)
 
 			if tt.args.trueVal {
-				body = bytes.NewBuffer([]byte(config.Params.BaseURL + "/" + tt.want.body))
-				assert.Equal(t, fmt.Sprint(w.Body), fmt.Sprint(body))
+				body = bytes.NewBuffer([]byte(config.HTTP + config.Cnf.BaseURL + "/" + tt.want.body))
+				assert.Equal(t, fmt.Sprint(body), fmt.Sprint(w.Body))
 			} else {
-				body = bytes.NewBuffer([]byte(config.Params.BaseURL + tt.want.body))
+				body = bytes.NewBuffer([]byte(config.Cnf.BaseURL + tt.want.body))
 				assert.NotEqual(t, fmt.Sprint(w.Body), fmt.Sprint(body))
 			}
 		})
@@ -190,7 +190,7 @@ func TestHandler_GetFullURL(t *testing.T) {
 		},
 	}
 
-	config.Params = *config.SetupConfig()
+	config.Cnf = *config.SetupConfig()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := server.SetupServer()
@@ -325,7 +325,6 @@ func TestBaseHandler_GetShortURL(t *testing.T) {
 
 			r := httptest.NewRecorder()
 
-			//body := bytes.NewBuffer([]byte(tt.args.body))
 			req, err := http.NewRequest("POST", "/api/shorten", bytes.NewBuffer([]byte(tt.args.body)))
 			s.ServeHTTP(r, req)
 

@@ -27,34 +27,32 @@ func NewBaseHandler(storage storage.Storage) *BaseHandler {
 }
 
 func (h *BaseHandler) GetFullURL(c *gin.Context) {
-	fmt.Println(c)
+	c.Writer.Header().Set("Content-Type", "text/plain")
 	shortURL := c.Param("id")
+	fmt.Printf("GetFullURL: short URL(param) = %s\n", shortURL)
 	fullURL, err := h.storage.GetFullURL(shortURL)
 	if err != nil {
-		//c.String(http.StatusNotFound, "")
+		fmt.Printf("\tError: no full url")
 		c.Writer.WriteHeader(http.StatusNotFound)
 		return
 	} else {
-		//c.Status(http.StatusTemporaryRedirect)
-		c.Status(200)
+		fmt.Printf("\tfull URL = %s\n", fullURL)
 		if !strings.HasPrefix(fullURL, config.HTTP) {
 			fullURL = config.HTTP + strings.TrimPrefix(fullURL, "//")
 		}
-		//c.Writer.Header().Set("Location", fullURL)
 		c.Redirect(http.StatusTemporaryRedirect, fullURL)
 	}
 }
 
 func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 	var shortURL string
-	fullURL, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		shortURL = ""
-	}
-	//shortURL = config.HTTPPref + "/" + h.storage.InsertURL(string(fullURL))
+	fullURL, _ := ioutil.ReadAll(c.Request.Body)
+	fmt.Printf("CreateShortURL: full URL(body) = %s\n", string(fullURL))
 	shortURL = h.storage.InsertURL(string(fullURL))
+	exShortURL := storage.ExpandShortURL(shortURL)
+	fmt.Printf("\tShort URL = %s\n", exShortURL)
 	c.Writer.Header().Set("Content-Type", "text/plain")
-	c.String(http.StatusCreated, shortURL)
+	c.String(http.StatusCreated, exShortURL)
 }
 
 func (h *BaseHandler) GetShortURL(c *gin.Context) {
@@ -64,27 +62,32 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 		c.String(http.StatusBadRequest, "")
 		return
 	}
-
+	fmt.Printf("GetShortURL: body(body) = %s\n", body)
 	var fullURL storage.FullURL
 	err = json.Unmarshal(body, &fullURL)
 	if err != nil {
+		fmt.Printf("\tError: no full URL")
 		c.String(http.StatusBadRequest, "")
 		return
 	}
 
+	fmt.Printf("\tfull URL = %s\n", fullURL.Full)
 	var shortURL *storage.ShortURL
 	var resStatus int
 	shortURL, err = h.storage.GetShortURL(fullURL.Full)
 	if err != nil {
-		//тогда создадим
-		strURL := h.storage.InsertURL(string(fullURL.Full))
+		fmt.Printf("\tError: no short URL, creating\n")
+		strURL := h.storage.InsertURL(fullURL.Full)
 		shortURL = &storage.ShortURL{
 			Short: strURL,
 		}
 		resStatus = http.StatusCreated
 	} else {
 		resStatus = http.StatusOK
+		//resStatus = http.StatusCreated
 	}
+	shortURL.Short = storage.ExpandShortURL(shortURL.Short)
+	fmt.Printf("\tshort URL = %s\n", shortURL.Short)
 	body, err = json.Marshal(shortURL)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "")

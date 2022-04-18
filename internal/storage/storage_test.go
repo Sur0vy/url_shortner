@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"github.com/Sur0vy/url_shortner.git/internal/config"
+	"bufio"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
 	"testing"
 )
 
@@ -29,7 +30,7 @@ func TestMapStorage_GetFullURL(t *testing.T) {
 				data: map[int]URL{
 					1: {
 						Full:  "www.blabla.ru",
-						Short: config.HTTPPref + "/" + "1",
+						Short: "1",
 					},
 				},
 			},
@@ -91,7 +92,7 @@ func TestMapStorage_InsertURL(t *testing.T) {
 				data: map[int]URL{
 					1: {
 						Full:  "http://www.blabla.net/blablabla",
-						Short: "http://localhost:8080/1",
+						Short: "1",
 					},
 				},
 			},
@@ -191,6 +192,159 @@ func TestMapStorage_GetShortURL(t *testing.T) {
 				return
 			}
 			assert.Error(t, err)
+		})
+	}
+}
+
+func TestMapStorage_Load(t *testing.T) {
+	type args struct {
+		fileName string
+		data     map[int]string
+	}
+	type fields struct {
+		url map[int]URL
+	}
+	tests := []struct {
+		name string
+		args args
+		want fields
+	}{
+		{
+			name: "Test load from file #1",
+			args: args{
+				fileName: "\test.txt",
+				data: map[int]string{
+					1: `{"url":"http://www.werewrewr.com/f7","result":"http://localhost:8080/1"}`,
+					2: `{"url": "http://www.werewrewr.com/f7/saf", "result": "http://localhost:8080/2"}`,
+				},
+			},
+			want: fields{
+				url: map[int]URL{
+					1: {
+						Full:  "http://www.werewrewr.com/f7",
+						Short: "http://localhost:8080/1",
+					},
+					2: {
+						Full:  "http://www.werewrewr.com/f7/saf",
+						Short: "http://localhost:8080/2",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			file, _ := os.OpenFile(tt.args.fileName, os.O_RDWR|os.O_CREATE, 0777)
+			defer os.Remove(tt.args.fileName)
+			writer := bufio.NewWriter(file)
+			for _, data := range tt.args.data {
+				writer.WriteString(data + "\n")
+			}
+			writer.Flush()
+			file.Close()
+			ms := NewMapStorage()
+			ms.Load(tt.args.fileName)
+
+			for _, item := range tt.want.url {
+				ShortURL, err := ms.GetShortURL(item.Full)
+				assert.Nil(t, err)
+				if err == nil {
+					assert.Equal(t, item.Short, ShortURL.Short)
+				}
+			}
+		})
+	}
+}
+
+func TestMapStorage_addToFile(t *testing.T) {
+	type args struct {
+		fileName string
+		data     map[int]URL
+	}
+	type fields struct {
+		url map[int]URL
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    fields
+		wantErr bool
+	}{
+		{
+			name: "Test add to file 2 item write/read",
+			args: args{
+				fileName: "\test.txt",
+				data: map[int]URL{
+					1: {
+						Full:  "http://www.werewrewr.com/f7",
+						Short: "1",
+					},
+					2: {
+						Full:  "http://www.werewrewr.com/f7/saf",
+						Short: "2",
+					},
+				},
+			},
+			want: fields{
+				url: map[int]URL{
+					1: {
+						Full:  "http://www.werewrewr.com/f7",
+						Short: "1",
+					},
+					2: {
+						Full:  "http://www.werewrewr.com/f7/saf",
+						Short: "2",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test add to file no URL",
+			args: args{
+				fileName: "\test.txt",
+				data: map[int]URL{
+					1: {
+						Full:  "http://www.werewrewr.com/f7/saf",
+						Short: "1",
+					},
+				},
+			},
+			want: fields{
+				url: map[int]URL{
+					1: {
+						Full:  "http://www.werewrewr.com/f7",
+						Short: "1",
+					},
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ms := NewMapStorage()
+			ms.Load(tt.args.fileName)
+			defer os.Remove(tt.args.fileName)
+			for _, item := range tt.args.data {
+				ms.addToFile(&item)
+			}
+
+			ms2 := NewMapStorage()
+			ms2.Load(tt.args.fileName)
+
+			for _, data := range tt.want.url {
+				ShortURL, err := ms2.GetShortURL(data.Full)
+				if tt.wantErr == false {
+					assert.Nil(t, err)
+					if err == nil {
+						assert.Equal(t, data.Short, ShortURL.Short)
+					}
+				} else {
+					assert.NotNil(t, err)
+				}
+			}
+			defer os.Remove(tt.args.fileName)
 		})
 	}
 }
