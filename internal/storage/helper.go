@@ -5,5 +5,5 @@ import (
 )
 
 func ExpandShortURL(shortURL string) string {
-	return config.HTTP + config.HostAddr + ":" + config.Params.BasePort() + "/" + shortURL
+	return config.HTTP + config.HostAddr + ":" + config.Cnf.BasePort() + "/" + shortURL
 }

@@ -8,40 +8,40 @@ import (
 	"strings"
 )
 
-var Params EnvConfig
+var Cnf Config
 
-type EnvConfig struct {
+type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
 	BaseURL       string `env:"BASE_URL"`
 	StoragePath   string `env:"FILE_STORAGE_PATH"`
 }
 
-func newEnvConfig() *EnvConfig {
-	return &EnvConfig{
+func newConfig() *Config {
+	return &Config{
 		ServerAddress: HostAddr + ":" + HostPort,
 		BaseURL:       HostAddr + ":" + HostPort,
 		StoragePath:   "",
 	}
 }
 
-type ConfigOption func(*EnvConfig)
+type ConfigOption func(*Config)
 
-func NotDefaultParams() ConfigOption {
-	return func(c *EnvConfig) {
-		c.readParams()
+func LoadParams() ConfigOption {
+	return func(c *Config) {
+		c.flagParams()
 		env.Parse(c)
 	}
 }
 
-func SetupConfig(opts ...ConfigOption) *EnvConfig {
-	c := newEnvConfig()
+func SetupConfig(opts ...ConfigOption) *Config {
+	c := newConfig()
 	for _, opt := range opts {
 		opt(c)
 	}
 	return c
 }
 
-func (c *EnvConfig) readParams() {
+func (c *Config) flagParams() {
 	args := os.Args
 	fmt.Printf("All arguments: %v\n", args)
 	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "host to listen on")
@@ -50,7 +50,7 @@ func (c *EnvConfig) readParams() {
 	flag.Parse()
 }
 
-func (c *EnvConfig) BasePort() string {
+func (c *Config) BasePort() string {
 	part := strings.Split(c.BaseURL, ":")
 	cnt := len(part)
 	if cnt > 1 {

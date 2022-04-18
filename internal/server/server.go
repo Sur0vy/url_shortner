@@ -11,7 +11,7 @@ import (
 
 func SetupServer() *gin.Engine {
 	memoryStorage := storage.NewMapStorage()
-	err := memoryStorage.Load(config.Params.StoragePath)
+	err := memoryStorage.Load(config.Cnf.StoragePath)
 	if err != nil {
 		fmt.Printf("\tNo stotage, or storage is corrapted!\n")
 	}
