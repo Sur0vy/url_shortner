@@ -36,7 +36,8 @@ func NewMapUserStorage() UserStorage {
 	return &MapUserStorage{
 		counter:  0,
 		fileName: dir + UsersFileName,
-		Data:     make(map[string]string),
+		//fileName: "/Users/Sur0vy/Projects/url_shortner/" + UsersFileName,
+		Data: make(map[string]string),
 	}
 }
 
@@ -54,7 +55,8 @@ func (u *MapUserStorage) Add() (string, string) {
 func (u *MapUserStorage) GetUser(hash string) string {
 	u.mtx.RLock()
 	defer u.mtx.RUnlock()
-	return u.Data[hash]
+	user := u.Data[hash]
+	return user
 }
 
 func (u *MapUserStorage) HasUser(hash string) bool {

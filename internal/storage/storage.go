@@ -173,7 +173,7 @@ func (s *MapStorage) GetUserURLs(user string) (string, error) {
 		}
 	}
 	if len(userDataList) == 0 {
-		return "", errors.New("No URLs found")
+		return "", errors.New("no URLs found")
 	}
 	data, err := json.Marshal(&userDataList)
 	if err != nil {

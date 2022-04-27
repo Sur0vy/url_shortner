@@ -84,7 +84,6 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 		resStatus = http.StatusCreated
 	} else {
 		resStatus = http.StatusOK
-		//resStatus = http.StatusCreated
 	}
 	shortURL.Short = storage.ExpandShortURL(shortURL.Short)
 	fmt.Printf("\tshort URL = %s\n", shortURL.Short)
@@ -100,9 +99,11 @@ func (h *BaseHandler) ResponseBadRequest(c *gin.Context) {
 }
 
 func (h *BaseHandler) GetUserURLs(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json")
 	users, err := h.storage.GetUserURLs(config.Cnf.CurrentUser)
 	if err != nil {
-		c.String(http.StatusNoContent, "")
+		c.AbortWithStatus(http.StatusNoContent)
+	} else {
+		c.String(http.StatusOK, users)
 	}
-	c.String(http.StatusOK, users)
 }
