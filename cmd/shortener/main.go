@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	config.Cnf = *config.SetupConfig(config.LoadParams())
+	config.Cnf = *config.Setup(config.LoadParams())
 	server.SetupServer().Run(config.Cnf.ServerAddress)
 }

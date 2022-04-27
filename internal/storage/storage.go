@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"os"
 	"strconv"
 	"sync"
 )
 
 type URL struct {
+	User  string `json:"user"`
 	Full  string `json:"url"`
 	Short string `json:"result"`
 }
@@ -23,46 +25,54 @@ type FullURL struct {
 	Full string `json:"url"`
 }
 
+type UserURL struct {
+	Full  string `json:"original_url"`
+	Short string `json:"short_url"`
+}
+
 type Storage interface {
 	InsertURL(fullURL string) string
 	GetFullURL(shortURL string) (string, error)
 	GetShortURL(fullURL string) (*ShortURL, error)
 	Load(fileName string) error
+	GetCount() int
+	GetUserURLs(user string) (string, error)
 }
 
 type MapStorage struct {
-	Counter         int
+	counter         int
 	Data            map[int]URL
 	fileStorageName string
-	sync.Mutex
+	mtx             sync.RWMutex
 }
 
-func NewMapStorage() *MapStorage {
+func New() Storage {
 	return &MapStorage{
-		Counter: 0,
+		counter: 0,
 		Data:    make(map[int]URL),
 	}
 }
 
 func (s *MapStorage) InsertURL(fullURL string) string {
-	//пока код не имеет значения
-	s.Lock()
-	s.Counter++
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
+	s.counter++
 	var URLItem = URL{
+		User:  config.Cnf.CurrentUser,
 		Full:  fullURL,
-		Short: strconv.Itoa(s.Counter),
+		Short: strconv.Itoa(s.counter),
 	}
 	fmt.Printf("\tAdd new URL to storage = %s\n", URLItem)
-	s.Data[s.Counter] = URLItem
+	s.Data[s.counter] = URLItem
 	if len(s.fileStorageName) > 0 {
 		s.addToFile(&URLItem)
 	}
-	s.Unlock()
 	return URLItem.Short
 }
 
 func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
-	//пока код не имеет значения
+	s.mtx.RLock()
+	defer s.mtx.RUnlock()
 	for _, element := range s.Data {
 		if element.Short == shortURL {
 			fmt.Printf("\tGet full URL from storage. short = %s ; full = %s\n", element.Short, element.Full)
@@ -74,7 +84,8 @@ func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
 }
 
 func (s *MapStorage) GetShortURL(fullURL string) (*ShortURL, error) {
-	//пока код не имеет значения
+	s.mtx.RLock()
+	defer s.mtx.RUnlock()
 	for _, element := range s.Data {
 		if element.Full == fullURL {
 			fmt.Printf("\tGet short URL from storage. full = %s ; short = %s\n", fullURL, element.Short)
@@ -106,11 +117,13 @@ func (s *MapStorage) Load(fileName string) error {
 		URLItem := URL{}
 		err = json.Unmarshal(data, &URLItem)
 		if err == nil {
-			s.Lock()
-			s.Counter++
-			fmt.Printf("\tLoad URL to storage = %s from file %s\n", URLItem, fileName)
-			s.Data[s.Counter] = URLItem
-			s.Unlock()
+			func() {
+				s.mtx.Lock()
+				defer s.mtx.Unlock()
+				s.counter++
+				fmt.Printf("\tLoad URL to storage = %s from file %s\n", URLItem, fileName)
+				s.Data[s.counter] = URLItem
+			}()
 		}
 	}
 }
@@ -140,4 +153,31 @@ func (s *MapStorage) addToFile(URLItem *URL) error {
 
 	// записываем буфер в файл
 	return writer.Flush()
+}
+
+func (s *MapStorage) GetCount() int {
+	return s.counter
+}
+
+func (s *MapStorage) GetUserURLs(user string) (string, error) {
+	var userDataList []UserURL
+	fmt.Printf("\tGet user %s urls\n", user)
+	for _, element := range s.Data {
+		if element.User == user {
+			fmt.Printf("\t\tURL = %s\n", element.Full)
+			userData := &UserURL{
+				Full:  element.Full,
+				Short: element.Short,
+			}
+			userDataList = append(userDataList, *userData)
+		}
+	}
+	if len(userDataList) == 0 {
+		return "", errors.New("No URLs found")
+	}
+	data, err := json.Marshal(&userDataList)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }

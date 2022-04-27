@@ -14,6 +14,7 @@ type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
 	BaseURL       string `env:"BASE_URL"`
 	StoragePath   string `env:"FILE_STORAGE_PATH"`
+	CurrentUser   string
 }
 
 func newConfig() *Config {
@@ -24,16 +25,16 @@ func newConfig() *Config {
 	}
 }
 
-type ConfigOption func(*Config)
+type option func(*Config)
 
-func LoadParams() ConfigOption {
+func LoadParams() option {
 	return func(c *Config) {
 		c.flagParams()
 		env.Parse(c)
 	}
 }
 
-func SetupConfig(opts ...ConfigOption) *Config {
+func Setup(opts ...option) *Config {
 	c := newConfig()
 	for _, opt := range opts {
 		opt(c)

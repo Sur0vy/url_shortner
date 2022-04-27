@@ -10,7 +10,9 @@ import (
 )
 
 func SetupServer() *gin.Engine {
-	memoryStorage := storage.NewMapStorage()
+	Users = NewMapUserStorage()
+	Users.LoadFromFile()
+	memoryStorage := storage.New()
 	err := memoryStorage.Load(config.Cnf.StoragePath)
 	if err != nil {
 		fmt.Printf("\tNo stotage, or storage is corrapted!\n")
@@ -19,8 +21,10 @@ func SetupServer() *gin.Engine {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+	router.Use(CookieMidlewared())
 	router.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithDecompressFn(gzip.DefaultDecompressHandle)))
 	router.GET("/:id", handler.GetFullURL)
+	router.GET("/api/user/urls", handler.GetUserURLs)
 	router.POST("/", handler.CreateShortURL)
 	router.POST("/api/shorten", handler.GetShortURL)
 	router.NoRoute(handler.ResponseBadRequest)

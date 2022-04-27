@@ -66,7 +66,7 @@ func TestHandler_CreateShortURL(t *testing.T) {
 			},
 		},
 	}
-	config.Cnf = *config.SetupConfig()
+	config.Cnf = *config.Setup()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := server.SetupServer()
@@ -190,7 +190,7 @@ func TestHandler_GetFullURL(t *testing.T) {
 		},
 	}
 
-	config.Cnf = *config.SetupConfig()
+	config.Cnf = *config.Setup()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := server.SetupServer()
@@ -229,7 +229,7 @@ func TestNewBaseHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := handlers.NewBaseHandler(storage.NewMapStorage())
+			ms := handlers.NewBaseHandler(storage.New())
 			assert.NotNil(t, ms)
 		})
 	}

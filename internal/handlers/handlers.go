@@ -98,3 +98,11 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 func (h *BaseHandler) ResponseBadRequest(c *gin.Context) {
 	c.String(http.StatusBadRequest, "")
 }
+
+func (h *BaseHandler) GetUserURLs(c *gin.Context) {
+	users, err := h.storage.GetUserURLs(config.Cnf.CurrentUser)
+	if err != nil {
+		c.String(http.StatusNoContent, "")
+	}
+	c.String(http.StatusOK, users)
+}

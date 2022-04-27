@@ -61,7 +61,7 @@ func TestMapStorage_GetFullURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &MapStorage{
-				Counter: tt.fields.counter,
+				counter: tt.fields.counter,
 				Data:    tt.fields.data,
 			}
 			fullURL, err := s.GetFullURL(tt.args.shortURL)
@@ -101,12 +101,12 @@ func TestMapStorage_InsertURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := NewMapStorage()
+			ms := New()
 			sh := ms.InsertURL(tt.fields.data[tt.fields.counter].Full)
 			//пока обработчик ошибок не предусмотрен, но над тестом стоит подумать
 			if !tt.wantErr {
 				assert.Equal(t, sh, tt.fields.data[tt.fields.counter].Short)
-				assert.Equal(t, ms.Counter, tt.fields.counter)
+				assert.Equal(t, ms.GetCount(), tt.fields.counter)
 			}
 		})
 	}
@@ -123,7 +123,7 @@ func TestNewMapStorage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := NewMapStorage()
+			ms := New()
 			assert.NotNil(t, ms)
 		})
 	}
@@ -182,7 +182,7 @@ func TestMapStorage_GetShortURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &MapStorage{
-				Counter: tt.fields.counter,
+				counter: tt.fields.counter,
 				Data:    tt.fields.data,
 			}
 			fullURL, err := s.GetShortURL(tt.args.fullURL)
@@ -242,7 +242,7 @@ func TestMapStorage_Load(t *testing.T) {
 			}
 			writer.Flush()
 			file.Close()
-			ms := NewMapStorage()
+			ms := New()
 			ms.Load(tt.args.fileName)
 
 			for _, item := range tt.want.url {
@@ -323,14 +323,14 @@ func TestMapStorage_addToFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := NewMapStorage()
+			ms := New()
 			ms.Load(tt.args.fileName)
 			defer os.Remove(tt.args.fileName)
 			for _, item := range tt.args.data {
-				ms.addToFile(&item)
+				ms.InsertURL(item.Full)
 			}
 
-			ms2 := NewMapStorage()
+			ms2 := New()
 			ms2.Load(tt.args.fileName)
 
 			for _, data := range tt.want.url {
