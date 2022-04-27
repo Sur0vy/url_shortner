@@ -36,8 +36,7 @@ func NewMapUserStorage() UserStorage {
 	return &MapUserStorage{
 		counter:  0,
 		fileName: dir + UsersFileName,
-		//fileName: "/Users/Sur0vy/Projects/url_shortner/" + UsersFileName,
-		Data: make(map[string]string),
+		Data:     make(map[string]string),
 	}
 }
 

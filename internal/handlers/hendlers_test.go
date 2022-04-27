@@ -1,4 +1,4 @@
-package hendlers_test
+package handlers_test
 
 import (
 	"bytes"
