@@ -167,7 +167,7 @@ func (s *MapStorage) GetUserURLs(user string) (string, error) {
 			fmt.Printf("\t\tURL = %s\n", element.Full)
 			userData := &UserURL{
 				Full:  element.Full,
-				Short: element.Short,
+				Short: ExpandShortURL(element.Short),
 			}
 			userDataList = append(userDataList, *userData)
 		}
