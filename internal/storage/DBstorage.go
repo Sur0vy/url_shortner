@@ -57,10 +57,10 @@ func (s *DBStorage) GetUserURLs(user string) (string, error) {
 
 func (s *DBStorage) IsAvailable() bool {
 	err := s.database.Ping()
-	if err != nil {
-		return false
+	if err == nil {
+		return true
 	}
-	return true
+	return false
 
 	//ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	//defer cancel()
