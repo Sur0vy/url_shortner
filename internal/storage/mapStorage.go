@@ -171,8 +171,5 @@ func (s *MapStorage) IsAvailable() bool {
 	defer db.Close()
 
 	err = db.Ping()
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }
