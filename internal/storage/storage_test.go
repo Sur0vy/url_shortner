@@ -101,7 +101,7 @@ func TestMapStorage_InsertURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := New()
+			ms := NewMapStorage()
 			sh := ms.InsertURL(tt.fields.data[tt.fields.counter].Full)
 			//пока обработчик ошибок не предусмотрен, но над тестом стоит подумать
 			if !tt.wantErr {
@@ -123,7 +123,7 @@ func TestNewMapStorage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := New()
+			ms := NewMapStorage()
 			assert.NotNil(t, ms)
 		})
 	}
@@ -242,7 +242,7 @@ func TestMapStorage_Load(t *testing.T) {
 			}
 			writer.Flush()
 			file.Close()
-			ms := New()
+			ms := NewMapStorage()
 			ms.Load(tt.args.fileName)
 
 			for _, item := range tt.want.url {
@@ -323,14 +323,14 @@ func TestMapStorage_addToFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := New()
+			ms := NewMapStorage()
 			ms.Load(tt.args.fileName)
 			defer os.Remove(tt.args.fileName)
 			for _, item := range tt.args.data {
 				ms.InsertURL(item.Full)
 			}
 
-			ms2 := New()
+			ms2 := NewMapStorage()
 			ms2.Load(tt.args.fileName)
 
 			for _, data := range tt.want.url {

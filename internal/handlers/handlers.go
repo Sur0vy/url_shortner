@@ -107,3 +107,11 @@ func (h *BaseHandler) GetUserURLs(c *gin.Context) {
 		c.String(http.StatusOK, users)
 	}
 }
+
+func (h *BaseHandler) Ping(c *gin.Context) {
+	if h.storage.IsAvailable() {
+		c.Status(http.StatusOK)
+	} else {
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+}

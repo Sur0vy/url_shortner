@@ -229,7 +229,7 @@ func TestNewBaseHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := handlers.NewBaseHandler(storage.New())
+			ms := handlers.NewBaseHandler(storage.NewMapStorage())
 			assert.NotNil(t, ms)
 		})
 	}

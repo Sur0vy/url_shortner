@@ -1,8 +1,6 @@
 package server
 
 import (
-	"fmt"
-	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/Sur0vy/url_shortner.git/internal/handlers"
 	"github.com/Sur0vy/url_shortner.git/internal/storage"
 	"github.com/gin-contrib/gzip"
@@ -12,11 +10,7 @@ import (
 func SetupServer() *gin.Engine {
 	Users = NewMapUserStorage()
 	Users.LoadFromFile()
-	memoryStorage := storage.New()
-	err := memoryStorage.Load(config.Cnf.StoragePath)
-	if err != nil {
-		fmt.Printf("\tNo stotage, or storage is corrapted!\n")
-	}
+	memoryStorage := storage.NewMapStorage()
 	handler := handlers.NewBaseHandler(memoryStorage)
 
 	gin.SetMode(gin.ReleaseMode)
@@ -27,6 +21,7 @@ func SetupServer() *gin.Engine {
 	router.GET("/api/user/urls", handler.GetUserURLs)
 	router.POST("/", handler.CreateShortURL)
 	router.POST("/api/shorten", handler.GetShortURL)
+	router.GET("/ping", handler.Ping)
 	router.NoRoute(handler.ResponseBadRequest)
 	return router
 }
