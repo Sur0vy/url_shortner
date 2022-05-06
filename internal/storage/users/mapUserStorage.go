@@ -8,8 +8,6 @@ import (
 	"sync"
 )
 
-//TODO: перенести в структуру Storage
-
 type MapUserStorage struct {
 	current  string
 	fileName string
@@ -44,15 +42,6 @@ func (u *MapUserStorage) GetUser(hash string) string {
 	defer u.mtx.RUnlock()
 	user := u.Data[hash]
 	return user
-}
-
-func (u *MapUserStorage) HasUser(hash string) bool {
-	u.mtx.RLock()
-	defer u.mtx.RUnlock()
-	if _, found := u.Data[hash]; found {
-		return true
-	}
-	return false
 }
 
 func (u *MapUserStorage) LoadFromFile() error {

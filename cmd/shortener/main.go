@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/Sur0vy/url_shortner.git/internal/database"
 	"github.com/Sur0vy/url_shortner.git/internal/server"
@@ -26,12 +25,9 @@ func setupMapStorage() *storage.Storage {
 }
 
 func setupDBStorage() *storage.Storage {
-	var err error
-	database.DB, err = sql.Open("pgx", config.Cnf.DatabaseDSN)
-	if err != nil {
-		panic(err)
-	}
-	//create db connection
+	database.Connect()
+	database.CreateTables()
+
 	st := storage.NewDBStorage(database.DB)
 
 	//load users from database

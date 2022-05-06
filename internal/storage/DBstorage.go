@@ -1,23 +1,26 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
+	"github.com/Sur0vy/url_shortner.git/internal/storage/users"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"time"
 )
 
 type DBStorage struct {
-	//	connectionStr string
-	database *sql.DB
+	userStorage users.UserStorage
+	counter     int
+	database    *sql.DB
 }
 
 func NewDBStorage(db *sql.DB) Storage {
 	s := &DBStorage{
-		database: db,
+		database:    db,
+		counter:     0,
+		userStorage: users.NewDBUserStorage(db),
 	}
-	//	err := s.Load(config.Cnf.DatabaseDSN)
-	//	if err != nil {
-	//		fmt.Printf("\tNo stotage, or storage is corrapted!\n")
-	//	}
 	return s
 }
 
@@ -35,20 +38,19 @@ func (s *DBStorage) GetShortURL(fullURL string) (*ShortURL, error) {
 	}, nil
 }
 
-//func (s *DBStorage) Load(val string) error {
-//	var err error
-//	s.connectionStr = val
-//
-//	s.database, err = sql.Open("pgx", s.connectionStr)
-//	if err != nil {
-//		return err
-//	}
-//	defer s.database.Close()
-//	return nil
-//}
-
 func (s *DBStorage) GetCount() int {
-	return -1
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var ret int
+	sql := "SELECT count(id) FROM \"url\""
+	row := s.database.QueryRowContext(ctx, sql)
+	err := row.Scan(&ret)
+
+	if err != nil {
+		return 0
+	}
+	return ret
 }
 
 func (s *DBStorage) GetUserURLs(user string) (string, error) {
@@ -56,13 +58,14 @@ func (s *DBStorage) GetUserURLs(user string) (string, error) {
 }
 
 func (s *DBStorage) AddUser() (string, string) {
-	return "", ""
+	return s.userStorage.Add()
 }
 
 func (s *DBStorage) GetUser(hash string) string {
-	return ""
+	return s.userStorage.GetUser(hash)
 }
 
 func (s *DBStorage) Load(val string) error {
+	fmt.Printf("\tload function not implemented. file= %s not used\n", val)
 	return nil
 }

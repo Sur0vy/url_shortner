@@ -13,7 +13,6 @@ const (
 type UserStorage interface {
 	Add() (string, string)
 	GetUser(hash string) string
-	HasUser(id string) bool
 	LoadFromFile() error
 	GetCount() int
 }

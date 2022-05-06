@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/Sur0vy/url_shortner.git/internal/database"
-
-	//	"github.com/Sur0vy/url_shortner.git/internal/server"
 	"github.com/Sur0vy/url_shortner.git/internal/storage"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"

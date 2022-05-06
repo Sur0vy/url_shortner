@@ -1,80 +1,73 @@
 package users
 
+import (
+	"context"
+	"database/sql"
+	"strconv"
+	"time"
+)
+
 type DBUserStorage struct {
-	//current  string
-	//fileName string
-	//counter  int
-	//Data     map[string]string
-	//mtx      sync.RWMutex
+	counter  int
+	database *sql.DB
 }
 
-func NewDBUserStorage() UserStorage {
-	//dir, _ := os.Executable()
-	//return &MapUserStorage{
-	//	counter:  0,
-	//	fileName: dir + UsersFileName,
-	//	//fileName: "/Users/Sur0vy/Projects/url_shortner/" + UsersFileName,
-	//	Data: make(map[string]string),
-	//}
-	return nil
+func NewDBUserStorage(db *sql.DB) UserStorage {
+	return &DBUserStorage{
+		counter:  0,
+		database: db,
+	}
 }
 
 func (u *DBUserStorage) Add() (string, string) {
-	//u.mtx.Lock()
-	//defer u.mtx.Unlock()
-	//u.counter++
-	//user := User + strconv.Itoa(u.counter)
-	//hash := generateHash(user)
-	//u.Data[hash] = user
-	//u.writeToFile()
-	//return user, hash
-	return "", ""
+	u.counter++
+	user := User + strconv.Itoa(u.counter)
+	hash := GenerateHash(user)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	sql := "INSERT INTO \"user\" (name, hash) VALUES ($1, $2)"
+	_, err := u.database.ExecContext(ctx, sql, user, hash)
+	if err != nil {
+		return "", ""
+	}
+
+	return user, hash
 }
 
 func (u *DBUserStorage) GetUser(hash string) string {
-	//u.mtx.RLock()
-	//defer u.mtx.RUnlock()
-	//user := u.Data[hash]
-	//return user
-	return ""
-}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-func (u *DBUserStorage) HasUser(hash string) bool {
-	//u.mtx.RLock()
-	//defer u.mtx.RUnlock()
-	//if _, found := u.Data[hash]; found {
-	//	return true
-	//}
-	//return false
-	return false
+	var name string
+
+	sql := "SELECT name FROM \"user\" WHERE hash = $1"
+	row := u.database.QueryRowContext(ctx, sql, hash)
+	err := row.Scan(&name)
+
+	if err != nil {
+		return ""
+	}
+
+	return name
 }
 
 func (u *DBUserStorage) LoadFromFile() error {
-	//file, err := os.OpenFile(u.fileName, os.O_RDONLY|os.O_CREATE, 0777)
-	//if err != nil {
-	//	return err
-	//}
-	//defer file.Close()
-	//
-	//scanner := bufio.NewScanner(file)
-	//
-	//if !scanner.Scan() {
-	//	return scanner.Err()
-	//}
-	//data := scanner.Bytes()
-	//
-	//u.mtx.Lock()
-	//defer u.mtx.Unlock()
-	//err = json.Unmarshal(data, &u.Data)
-	//if err != nil {
-	//	return err
-	//}
-	//u.counter = len(u.Data)
-	//return nil
 	return nil
 }
 
 func (u *DBUserStorage) GetCount() int {
-	//return u.counter
-	return 0
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var ret int
+	sql := "SELECT count(name) FROM \"user\""
+	row := u.database.QueryRowContext(ctx, sql)
+	err := row.Scan(&ret)
+
+	if err != nil {
+		return 0
+	}
+	return ret
 }
