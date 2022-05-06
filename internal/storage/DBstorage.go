@@ -3,9 +3,11 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/Sur0vy/url_shortner.git/internal/storage/users"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"strconv"
 	"time"
 )
 
@@ -25,11 +27,41 @@ func NewDBStorage(db *sql.DB) Storage {
 }
 
 func (s *DBStorage) InsertURL(fullURL string) string {
-	return "dummy"
+	s.counter++
+	short := strconv.Itoa(s.counter)
+
+	fmt.Printf("\tAdd new URL to storage full = %s, short = %s\n", fullURL, short)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	sql := "INSERT INTO \"url\" (\"full\", \"short\") VALUES ($1, $2)"
+	_, err := s.database.ExecContext(ctx, sql, fullURL, short)
+
+	if err != nil {
+		return ""
+	}
+
+	return short
 }
 
 func (s *DBStorage) GetFullURL(shortURL string) (string, error) {
-	return "dummy", nil
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var ret string
+
+	sql := "SELECT \"full\" FROM \"url\" where short = $1"
+	row := s.database.QueryRowContext(ctx, sql, shortURL)
+
+	err := row.Scan(&ret)
+
+	if err != nil {
+		fmt.Printf("\tNo URL in storage: %s\n", shortURL)
+		return "", errors.New("wrong id")
+	}
+	return ret, nil
 }
 
 func (s *DBStorage) GetShortURL(fullURL string) (*ShortURL, error) {
