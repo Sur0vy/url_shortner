@@ -69,7 +69,8 @@ func TestHandler_CreateShortURL(t *testing.T) {
 	config.Cnf = *config.Setup()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := server.SetupServer()
+			storage := storage.NewMapStorage()
+			s := server.SetupServer(&storage)
 
 			w := httptest.NewRecorder()
 
@@ -193,7 +194,8 @@ func TestHandler_GetFullURL(t *testing.T) {
 	config.Cnf = *config.Setup()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := server.SetupServer()
+			storage := storage.NewMapStorage()
+			s := server.SetupServer(&storage)
 			w := httptest.NewRecorder()
 
 			//заполним БД
@@ -229,7 +231,8 @@ func TestNewBaseHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := handlers.NewBaseHandler(storage.NewMapStorage())
+			storage := storage.NewMapStorage()
+			ms := handlers.NewBaseHandler(&storage)
 			assert.NotNil(t, ms)
 		})
 	}
@@ -313,7 +316,8 @@ func TestBaseHandler_GetShortURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := server.SetupServer()
+			storage := storage.NewMapStorage()
+			s := server.SetupServer(&storage)
 			w := httptest.NewRecorder()
 
 			//заполним БД

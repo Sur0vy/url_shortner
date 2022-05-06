@@ -1,27 +1,14 @@
-package server
+package users
 
 import (
 	"bufio"
-	"crypto/md5"
 	"encoding/json"
-	"fmt"
 	"os"
 	"strconv"
 	"sync"
 )
 
-const (
-	User          string = "User_"
-	UsersFileName string = "Users.txt"
-)
-
-type UserStorage interface {
-	Add() (string, string)
-	GetUser(hash string) string
-	HasUser(id string) bool
-	LoadFromFile() error
-	GetCount() int
-}
+//TODO: перенести в структуру Storage
 
 type MapUserStorage struct {
 	current  string
@@ -46,7 +33,7 @@ func (u *MapUserStorage) Add() (string, string) {
 	defer u.mtx.Unlock()
 	u.counter++
 	user := User + strconv.Itoa(u.counter)
-	hash := generateHash(user)
+	hash := GenerateHash(user)
 	u.Data[hash] = user
 	u.writeToFile()
 	return user, hash
@@ -115,9 +102,4 @@ func (u *MapUserStorage) writeToFile() error {
 
 func (u *MapUserStorage) GetCount() int {
 	return u.counter
-}
-
-func generateHash(val string) string {
-	h := md5.Sum([]byte(val))
-	return fmt.Sprintf("%x", h)
 }

@@ -2,11 +2,11 @@ package storage
 
 import (
 	"bufio"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Sur0vy/url_shortner.git/internal/config"
+	"github.com/Sur0vy/url_shortner.git/internal/storage/users"
 	"os"
 	"strconv"
 	"sync"
@@ -16,14 +16,18 @@ type MapStorage struct {
 	counter         int
 	Data            map[int]URL
 	fileStorageName string
+	userStorage     users.UserStorage
 	mtx             sync.RWMutex
 }
 
 func NewMapStorage() Storage {
 	s := &MapStorage{
-		counter: 0,
-		Data:    make(map[int]URL),
+		counter:     0,
+		Data:        make(map[int]URL),
+		userStorage: users.NewMapUserStorage(),
 	}
+
+	s.userStorage.LoadFromFile()
 
 	err := s.Load(config.Cnf.StoragePath)
 	if err != nil {
@@ -161,15 +165,10 @@ func (s *MapStorage) GetUserURLs(user string) (string, error) {
 	return string(data), nil
 }
 
-func (s *MapStorage) IsAvailable() bool {
-	//------------заглушка для прохождения тестов, пока БД не спроектирована и методы не описаны
-	DSN := config.Cnf.DatabaseCon
-	db, err := sql.Open("pgx", DSN)
-	if err != nil {
-		return false
-	}
-	defer db.Close()
+func (s *MapStorage) AddUser() (string, string) {
+	return s.userStorage.Add()
+}
 
-	err = db.Ping()
-	return err == nil
+func (s *MapStorage) GetUser(hash string) string {
+	return s.userStorage.GetUser(hash)
 }

@@ -26,5 +26,6 @@ type Storage interface {
 	Load(val string) error
 	GetCount() int
 	GetUserURLs(user string) (string, error)
-	IsAvailable() bool
+	AddUser() (string, string)
+	GetUser(hash string) string
 }

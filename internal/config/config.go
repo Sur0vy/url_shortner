@@ -14,7 +14,7 @@ type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
 	BaseURL       string `env:"BASE_URL"`
 	StoragePath   string `env:"FILE_STORAGE_PATH"`
-	DatabaseCon   string `env:"DATABASE_DSN"`
+	DatabaseDSN   string `env:"DATABASE_DSN"`
 	CurrentUser   string
 }
 
@@ -49,7 +49,7 @@ func (c *Config) flagParams() {
 	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "host to listen on")
 	flag.StringVar(&c.BaseURL, "b", c.BaseURL, "base address")
 	flag.StringVar(&c.StoragePath, "f", c.StoragePath, "path to storage file")
-	flag.StringVar(&c.DatabaseCon, "d", c.DatabaseCon, "address to database connection")
+	flag.StringVar(&c.DatabaseDSN, "d", c.DatabaseDSN, "address to database connection")
 	flag.Parse()
 }
 

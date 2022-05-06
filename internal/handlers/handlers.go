@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Sur0vy/url_shortner.git/internal/config"
+	"github.com/Sur0vy/url_shortner.git/internal/database"
+
+	//	"github.com/Sur0vy/url_shortner.git/internal/server"
 	"github.com/Sur0vy/url_shortner.git/internal/storage"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
@@ -22,8 +25,10 @@ type BaseHandler struct {
 	storage storage.Storage
 }
 
-func NewBaseHandler(storage storage.Storage) *BaseHandler {
-	return &BaseHandler{storage: storage}
+func NewBaseHandler(s *storage.Storage) *BaseHandler {
+	return &BaseHandler{
+		storage: *s,
+	}
 }
 
 func (h *BaseHandler) GetFullURL(c *gin.Context) {
@@ -109,7 +114,8 @@ func (h *BaseHandler) GetUserURLs(c *gin.Context) {
 }
 
 func (h *BaseHandler) Ping(c *gin.Context) {
-	if h.storage.IsAvailable() {
+	err := database.DB.Ping()
+	if err == nil {
 		c.Status(http.StatusOK)
 	} else {
 		c.AbortWithStatus(http.StatusInternalServerError)

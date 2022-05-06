@@ -7,15 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupServer() *gin.Engine {
-	Users = NewMapUserStorage()
-	Users.LoadFromFile()
-	memoryStorage := storage.NewMapStorage()
-	handler := handlers.NewBaseHandler(memoryStorage)
-
+func SetupServer(s *storage.Storage) *gin.Engine {
+	handler := handlers.NewBaseHandler(s)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	router.Use(CookieMidlewared())
+	router.Use(CookieMidlewared(s))
 	router.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithDecompressFn(gzip.DefaultDecompressHandle)))
 	router.GET("/:id", handler.GetFullURL)
 	router.GET("/api/user/urls", handler.GetUserURLs)

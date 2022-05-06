@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/Sur0vy/url_shortner.git/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -17,7 +18,8 @@ func TestSetupServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := SetupServer()
+			storage := storage.NewMapStorage()
+			s := SetupServer(&storage)
 			assert.NotNil(t, s)
 		})
 	}
