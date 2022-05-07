@@ -10,11 +10,13 @@ func CookieMidlewared(s *storage.Storage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookie, err := c.Cookie("url_shortner")
 		if err != nil || cookie == "" {
-			user, id := (*s).AddUser()
+			user, hash := (*s).AddUser()
 			config.Cnf.CurrentUser = user
-			c.SetCookie("url_shortner", id, 3600, "/", "localhost", false, true)
+			config.Cnf.CurrentUserHash = hash
+			c.SetCookie("url_shortner", hash, 3600, "/", "localhost", false, true)
 		} else {
 			config.Cnf.CurrentUser = (*s).GetUser(cookie)
+			config.Cnf.CurrentUserHash = cookie
 		}
 	}
 }

@@ -11,11 +11,12 @@ import (
 var Cnf Config
 
 type Config struct {
-	ServerAddress string `env:"SERVER_ADDRESS"`
-	BaseURL       string `env:"BASE_URL"`
-	StoragePath   string `env:"FILE_STORAGE_PATH"`
-	DatabaseDSN   string `env:"DATABASE_DSN"`
-	CurrentUser   string
+	ServerAddress   string `env:"SERVER_ADDRESS"`
+	BaseURL         string `env:"BASE_URL"`
+	StoragePath     string `env:"FILE_STORAGE_PATH"`
+	DatabaseDSN     string `env:"DATABASE_DSN"`
+	CurrentUser     string
+	CurrentUserHash string
 }
 
 func newConfig() *Config {
