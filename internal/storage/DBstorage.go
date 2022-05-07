@@ -145,6 +145,10 @@ func (s *DBStorage) GetUserURLs(user string) (string, error) {
 		userDataList = append(userDataList, userData)
 	}
 
+	if err := rows.Err(); err != nil {
+		return "", err
+	}
+
 	if len(userDataList) == 0 {
 		return "", errors.New("no URLs found")
 	}
