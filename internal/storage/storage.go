@@ -19,6 +19,12 @@ type UserURL struct {
 	Short string `json:"short_url"`
 }
 
+type URLIdFull struct {
+	Id    string `json:"correlation_id,omitempty"`
+	Full  string `json:"original_url,omitempty"`
+	Short string `json:"short_url,omitempty"`
+}
+
 type Storage interface {
 	InsertURL(fullURL string) string
 	GetFullURL(shortURL string) (string, error)
@@ -28,4 +34,5 @@ type Storage interface {
 	GetUserURLs(user string) (string, error)
 	AddUser() (string, string)
 	GetUser(hash string) string
+	InsertURLs([]URLIdFull) (string, error)
 }

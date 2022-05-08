@@ -13,11 +13,15 @@ func SetupServer(s *storage.Storage) *gin.Engine {
 	router := gin.Default()
 	router.Use(CookieMidlewared(s))
 	router.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithDecompressFn(gzip.DefaultDecompressHandle)))
-	router.GET("/:id", handler.GetFullURL)
-	router.GET("/api/user/urls", handler.GetUserURLs)
+	api := router.Group("/api")
+	api.GET("/user/urls", handler.GetUserURLs)
+	api.POST("/shorten", handler.GetShortURL)
+	api.POST("/shorten/batch", handler.AppendGroup)
+
 	router.POST("/", handler.CreateShortURL)
-	router.POST("/api/shorten", handler.GetShortURL)
+	router.GET("/:id", handler.GetFullURL)
 	router.GET("/ping", handler.Ping)
+
 	router.NoRoute(handler.ResponseBadRequest)
 	return router
 }

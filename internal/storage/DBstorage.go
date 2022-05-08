@@ -190,3 +190,70 @@ func (s *DBStorage) URLExist(fullURL string) string {
 	}
 	return short
 }
+
+func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	sql := fmt.Sprintf("INSERT INTO %s (%s, %s, %s) VALUES($1, $2, $3)",
+		database.TURL, database.FInfo, database.FFull, database.FShort)
+	insertStmt, err := s.database.PrepareContext(ctx, sql)
+
+	tx, err := s.database.Begin()
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback()
+
+	txStmt := tx.StmtContext(ctx, insertStmt)
+
+	inc := 1
+	for i, _ := range URLs {
+		short := s.URLExist(URLs[i].Full)
+		if short != "" {
+			URLs[i].Short = short
+		} else {
+			URLs[i].Short = strconv.Itoa(s.GetCount() + inc)
+			inc++
+			if _, err = txStmt.ExecContext(ctx, URLs[i].Id, URLs[i].Full, URLs[i].Short); err != nil {
+				return "", err
+
+			}
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return "", err
+	}
+
+	//встака ссылки на пользователя
+	sql = fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES($1, $2)",
+		database.TUserURL, database.FShort, database.FUserHash)
+	insertStmt, err = s.database.PrepareContext(ctx, sql)
+
+	tx, err = s.database.Begin()
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback()
+
+	txStmt = tx.StmtContext(ctx, insertStmt)
+
+	for i, _ := range URLs {
+		URLs[i].Full = ""
+		if _, err = txStmt.ExecContext(ctx, URLs[i].Short, config.Cnf.CurrentUserHash); err != nil {
+			return "", err
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return "", err
+	}
+
+	//json to string marshall
+	data, err := json.Marshal(&URLs)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}

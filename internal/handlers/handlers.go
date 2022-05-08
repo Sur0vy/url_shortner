@@ -7,6 +7,7 @@ import (
 	"github.com/Sur0vy/url_shortner.git/internal/database"
 	"github.com/Sur0vy/url_shortner.git/internal/storage"
 	"github.com/gin-gonic/gin"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -118,4 +119,36 @@ func (h *BaseHandler) Ping(c *gin.Context) {
 	} else {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
+}
+
+func (h *BaseHandler) AppendGroup(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json")
+	URLs, err := readURLsFromJSON(c.Request.Body)
+	if err != nil {
+		c.String(http.StatusBadRequest, "")
+		return
+	}
+	//сохранить URL в БД и сразу получаем JSON с сокращенными URL
+	res, err := h.storage.InsertURLs(URLs)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "")
+		return
+	}
+	c.String(http.StatusCreated, res)
+}
+
+func readURLsFromJSON(reader io.ReadCloser) ([]storage.URLIdFull, error) {
+	input, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("GetShortURL: body(body) = %s\n", input)
+
+	var URLs []storage.URLIdFull
+	if err := json.Unmarshal(input, &URLs); err != nil {
+		fmt.Printf("\tURL unmarshal error: %s\n", err)
+		return nil, err
+	}
+	fmt.Printf("\tURL unmarshal success")
+	return URLs, nil
 }

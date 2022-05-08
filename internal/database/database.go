@@ -17,6 +17,7 @@ const (
 	TUserURL  string = "u_user_URL"
 	FShort    string = "URL_short"
 	FFull     string = "URL_full"
+	FInfo     string = "URL_info"
 	FUserName string = "User_name"
 	FUserHash string = "User_hash"
 )
@@ -33,8 +34,8 @@ func CreateTables() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	sql := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s TEXT UNIQUE, %s TEXT UNIQUE PRIMARY KEY)",
-		TURL, FFull, FShort)
+	sql := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s TEXT, %s TEXT UNIQUE, %s TEXT UNIQUE PRIMARY KEY)",
+		TURL, FInfo, FFull, FShort)
 	_, err := DB.ExecContext(ctx, sql)
 	if err != nil {
 		panic(err)

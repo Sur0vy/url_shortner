@@ -172,3 +172,8 @@ func (s *MapStorage) AddUser() (string, string) {
 func (s *MapStorage) GetUser(hash string) string {
 	return s.userStorage.GetUser(hash)
 }
+
+func (u *MapStorage) InsertURLs([]URLIdFull) (string, error) {
+	//TODO реализовать логику
+	return "", nil
+}

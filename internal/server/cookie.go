@@ -7,6 +7,7 @@ import (
 )
 
 func CookieMidlewared(s *storage.Storage) gin.HandlerFunc {
+	//TODO если пришел с кукой запрос, а ее нет в БД, нужно это обрабатывать
 	return func(c *gin.Context) {
 		cookie, err := c.Cookie("url_shortner")
 		if err != nil || cookie == "" {
