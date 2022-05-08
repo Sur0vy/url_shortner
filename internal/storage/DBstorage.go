@@ -1,5 +1,7 @@
 package storage
 
+//TODO иесиы на модуль
+
 import (
 	"context"
 	"database/sql"
@@ -240,10 +242,11 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	txStmt = tx.StmtContext(ctx, insertStmt)
 
 	for i, _ := range URLs {
-		URLs[i].Full = ""
 		if _, err = txStmt.ExecContext(ctx, URLs[i].Short, config.Cnf.CurrentUserHash); err != nil {
 			return "", err
 		}
+		URLs[i].Full = ""
+		URLs[i].Short = ExpandShortURL(URLs[i].Short)
 	}
 
 	if err = tx.Commit(); err != nil {

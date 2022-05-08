@@ -305,7 +305,7 @@ func TestMapStorage_addToFile(t *testing.T) {
 				fileName: "\test.txt",
 				data: map[int]URL{
 					1: {
-						Full:  "http://www.werewrewr.com/f7/saf",
+						Full:  "http://www.werewrewr.com/test1/test1",
 						Short: "1",
 					},
 				},
@@ -313,7 +313,7 @@ func TestMapStorage_addToFile(t *testing.T) {
 			want: fields{
 				url: map[int]URL{
 					1: {
-						Full:  "http://www.werewrewr.com/f7",
+						Full:  "http://www.werewrewr.com/test2",
 						Short: "1",
 					},
 				},
