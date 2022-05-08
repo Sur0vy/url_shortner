@@ -20,7 +20,7 @@ type UserURL struct {
 }
 
 type URLIdFull struct {
-	Id    string `json:"correlation_id,omitempty"`
+	ID    string `json:"correlation_id,omitempty"`
 	Full  string `json:"original_url,omitempty"`
 	Short string `json:"short_url,omitempty"`
 }

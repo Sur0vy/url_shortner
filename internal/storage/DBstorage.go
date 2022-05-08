@@ -200,6 +200,9 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	sql := fmt.Sprintf("INSERT INTO %s (%s, %s, %s) VALUES($1, $2, $3)",
 		database.TURL, database.FInfo, database.FFull, database.FShort)
 	insertStmt, err := s.database.PrepareContext(ctx, sql)
+	if err != nil {
+		return "", err
+	}
 
 	tx, err := s.database.Begin()
 	if err != nil {
@@ -210,14 +213,14 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	txStmt := tx.StmtContext(ctx, insertStmt)
 
 	inc := 1
-	for i, _ := range URLs {
+	for i, val := range URLs {
 		short := s.URLExist(URLs[i].Full)
 		if short != "" {
 			URLs[i].Short = short
 		} else {
 			URLs[i].Short = strconv.Itoa(s.GetCount() + inc)
 			inc++
-			if _, err = txStmt.ExecContext(ctx, URLs[i].Id, URLs[i].Full, URLs[i].Short); err != nil {
+			if _, err = txStmt.ExecContext(ctx, val.ID, val.Full, URLs[i].Short); err != nil {
 				return "", err
 
 			}
@@ -237,12 +240,16 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	
+	if err != nil {
+		return "", err
+	}
 	defer tx.Rollback()
 
 	txStmt = tx.StmtContext(ctx, insertStmt)
 
-	for i, _ := range URLs {
-		if _, err = txStmt.ExecContext(ctx, URLs[i].Short, config.Cnf.CurrentUserHash); err != nil {
+	for i, val := range URLs {
+		if _, err = txStmt.ExecContext(ctx, val.Short, config.Cnf.CurrentUserHash); err != nil {
 			return "", err
 		}
 		URLs[i].Full = ""
