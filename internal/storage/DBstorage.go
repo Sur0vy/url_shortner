@@ -235,15 +235,15 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	sql = fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES($1, $2)",
 		database.TUserURL, database.FShort, database.FUserHash)
 	insertStmt, err = s.database.PrepareContext(ctx, sql)
-
-	tx, err = s.database.Begin()
 	if err != nil {
 		return "", err
 	}
 	
+	tx, err = s.database.Begin()
 	if err != nil {
 		return "", err
 	}
+
 	defer tx.Rollback()
 
 	txStmt = tx.StmtContext(ctx, insertStmt)
