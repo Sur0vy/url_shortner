@@ -91,7 +91,8 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 		}
 		resStatus = http.StatusCreated
 	} else {
-		resStatus = http.StatusOK
+		//resStatus = http.StatusOK
+		resStatus = http.StatusConflict
 	}
 	shortURL.Short = storage.ExpandShortURL(shortURL.Short)
 	fmt.Printf("\tshort URL = %s\n", shortURL.Short)
