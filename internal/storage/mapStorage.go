@@ -36,21 +36,25 @@ func NewMapStorage() Storage {
 	return s
 }
 
-func (s *MapStorage) InsertURL(fullURL string) string {
-	s.mtx.Lock()
-	defer s.mtx.Unlock()
+func (s *MapStorage) InsertURL(fullURL string) (string, error) {
+	short, err := s.GetShortURL(fullURL)
+	if err == nil {
+		return short.Short, NewURLError("URL is exist")
+	}
 	s.counter++
 	var URLItem = URL{
 		User:  config.Cnf.CurrentUser,
 		Full:  fullURL,
 		Short: strconv.Itoa(s.counter),
 	}
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	fmt.Printf("\tAdd new URL to storage = %s\n", URLItem)
 	s.Data[s.counter] = URLItem
 	if len(s.fileStorageName) > 0 {
 		s.addToFile(&URLItem)
 	}
-	return URLItem.Short
+	return URLItem.Short, nil
 }
 
 func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
@@ -174,6 +178,6 @@ func (s *MapStorage) GetUser(hash string) string {
 }
 
 func (s *MapStorage) InsertURLs([]URLIdFull) (string, error) {
-	//TODO реализовать логику
+	//TODO реализовать логику + проверка на попытку вставить дубликат
 	return "", nil
 }

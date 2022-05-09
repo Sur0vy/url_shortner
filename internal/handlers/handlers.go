@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Sur0vy/url_shortner.git/internal/config"
 	"github.com/Sur0vy/url_shortner.git/internal/database"
@@ -49,14 +50,17 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 }
 
 func (h *BaseHandler) CreateShortURL(c *gin.Context) {
-	var shortURL string
 	fullURL, _ := ioutil.ReadAll(c.Request.Body)
 	fmt.Printf("CreateShortURL: full URL(body) = %s\n", string(fullURL))
-	shortURL = h.storage.InsertURL(string(fullURL))
+	var status = http.StatusCreated
+	shortURL, err := h.storage.InsertURL(string(fullURL))
+	if (err != nil) && (errors.Is(err, err.(*storage.URLError))) {
+		status = http.StatusConflict
+	}
 	exShortURL := storage.ExpandShortURL(shortURL)
 	fmt.Printf("\tShort URL = %s\n", exShortURL)
 	c.Writer.Header().Set("Content-Type", "text/plain")
-	c.String(http.StatusCreated, exShortURL)
+	c.String(status, exShortURL)
 }
 
 func (h *BaseHandler) GetShortURL(c *gin.Context) {
@@ -81,7 +85,7 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 	shortURL, err = h.storage.GetShortURL(fullURL.Full)
 	if err != nil {
 		fmt.Printf("\tError: no short URL, creating\n")
-		strURL := h.storage.InsertURL(fullURL.Full)
+		strURL, _ := h.storage.InsertURL(fullURL.Full)
 		shortURL = &storage.ShortURL{
 			Short: strURL,
 		}

@@ -29,11 +29,11 @@ func NewDBStorage(db *sql.DB) Storage {
 	return s
 }
 
-func (s *DBStorage) InsertURL(fullURL string) string {
+func (s *DBStorage) InsertURL(fullURL string) (string, error) {
 	//проверка на существование
 	short := s.URLExist(fullURL)
 	if short != "" {
-		return short
+		return short, NewURLError("URL is exist")
 	}
 
 	short = strconv.Itoa(s.GetCount() + 1)
@@ -48,7 +48,7 @@ func (s *DBStorage) InsertURL(fullURL string) string {
 		database.TURL, database.FFull, database.FShort)
 	_, err := s.database.ExecContext(ctx, sql, fullURL, short)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	//вставить ссылку на юзера
@@ -56,10 +56,10 @@ func (s *DBStorage) InsertURL(fullURL string) string {
 		database.TUserURL, database.FShort, database.FUserHash)
 	_, err = s.database.ExecContext(ctx, sql, short, config.Cnf.CurrentUserHash)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return short
+	return short, err
 }
 
 func (s *DBStorage) GetFullURL(shortURL string) (string, error) {
@@ -238,7 +238,7 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	tx, err = s.database.Begin()
 	if err != nil {
 		return "", err

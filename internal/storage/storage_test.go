@@ -102,7 +102,7 @@ func TestMapStorage_InsertURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms := NewMapStorage()
-			sh := ms.InsertURL(tt.fields.data[tt.fields.counter].Full)
+			sh, _ := ms.InsertURL(tt.fields.data[tt.fields.counter].Full)
 			//пока обработчик ошибок не предусмотрен, но над тестом стоит подумать
 			if !tt.wantErr {
 				assert.Equal(t, sh, tt.fields.data[tt.fields.counter].Short)

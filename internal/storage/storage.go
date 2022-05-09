@@ -26,7 +26,7 @@ type URLIdFull struct {
 }
 
 type Storage interface {
-	InsertURL(fullURL string) string
+	InsertURL(fullURL string) (string, error)
 	GetFullURL(shortURL string) (string, error)
 	GetShortURL(fullURL string) (*ShortURL, error)
 	Load(val string) error
