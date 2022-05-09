@@ -267,7 +267,7 @@ func TestBaseHandler_GetShortURL(t *testing.T) {
 			},
 			want: want{
 				body: testShortURL1JSON,
-				code: http.StatusOK,
+				code: http.StatusConflict,
 			},
 		},
 		{
@@ -309,7 +309,7 @@ func TestBaseHandler_GetShortURL(t *testing.T) {
 			},
 			want: want{
 				body: testShortURL2JSON,
-				code: http.StatusOK,
+				code: http.StatusConflict,
 			},
 		},
 	}
