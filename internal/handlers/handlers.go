@@ -136,8 +136,13 @@ func (h *BaseHandler) AppendGroup(c *gin.Context) {
 	//сохранить URL в БД и сразу получаем JSON с сокращенными URL
 	res, err := h.storage.InsertURLs(URLs)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "")
-		return
+		if errors.Is(err, err.(*storage.URLError)) {
+			c.String(http.StatusConflict, res)
+			return
+		} else {
+			c.String(http.StatusInternalServerError, "")
+			return
+		}
 	}
 	c.String(http.StatusCreated, res)
 }

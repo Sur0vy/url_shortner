@@ -197,8 +197,8 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	sql := fmt.Sprintf("INSERT INTO %s (%s, %s, %s) VALUES($1, $2, $3)",
-		database.TURL, database.FInfo, database.FFull, database.FShort)
+	sql := fmt.Sprintf("INSERT INTO %s (%s, %s, %s) VALUES($1, $2, $3) ON CONFLICT (%s) DO NOTHING",
+		database.TURL, database.FInfo, database.FFull, database.FShort, database.FShort)
 	insertStmt, err := s.database.PrepareContext(ctx, sql)
 	if err != nil {
 		return "", err
@@ -213,16 +213,17 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	txStmt := tx.StmtContext(ctx, insertStmt)
 
 	inc := 1
+	existCnt := 0
 	for i, val := range URLs {
 		short := s.URLExist(URLs[i].Full)
 		if short != "" {
 			URLs[i].Short = short
+			existCnt++
 		} else {
 			URLs[i].Short = strconv.Itoa(s.GetCount() + inc)
 			inc++
 			if _, err = txStmt.ExecContext(ctx, val.ID, val.Full, URLs[i].Short); err != nil {
 				return "", err
-
 			}
 		}
 	}
@@ -232,8 +233,8 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	}
 
 	//встака ссылки на пользователя
-	sql = fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES($1, $2)",
-		database.TUserURL, database.FShort, database.FUserHash)
+	sql = fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES($1, $2) ON CONFLICT (%s, %s) DO NOTHING",
+		database.TUserURL, database.FShort, database.FUserHash, database.FShort, database.FUserHash)
 	insertStmt, err = s.database.PrepareContext(ctx, sql)
 	if err != nil {
 		return "", err
@@ -264,6 +265,9 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	data, err := json.Marshal(&URLs)
 	if err != nil {
 		return "", err
+	}
+	if len(URLs) == existCnt {
+		return string(data), NewURLError("URL is exist")
 	}
 	return string(data), nil
 }

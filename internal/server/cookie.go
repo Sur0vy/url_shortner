@@ -7,17 +7,19 @@ import (
 )
 
 func CookieMidlewared(s *storage.Storage) gin.HandlerFunc {
-	//TODO если пришел с кукой запрос, а ее нет в БД, нужно это обрабатывать
 	return func(c *gin.Context) {
 		cookie, err := c.Cookie("url_shortner")
-		if err != nil || cookie == "" {
-			user, hash := (*s).AddUser()
-			config.Cnf.CurrentUser = user
-			config.Cnf.CurrentUserHash = hash
-			c.SetCookie("url_shortner", hash, 3600, "/", "localhost", false, true)
-		} else {
-			config.Cnf.CurrentUser = (*s).GetUser(cookie)
-			config.Cnf.CurrentUserHash = cookie
+		if err == nil && cookie != "" {
+			user := (*s).GetUser(cookie)
+			if user != "" {
+				config.Cnf.CurrentUser = user
+				config.Cnf.CurrentUserHash = cookie
+				return
+			}
 		}
+		user, hash := (*s).AddUser()
+		config.Cnf.CurrentUser = user
+		config.Cnf.CurrentUserHash = hash
+		c.SetCookie("url_shortner", hash, 3600, "/", "localhost", false, true)
 	}
 }

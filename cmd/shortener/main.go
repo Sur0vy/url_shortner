@@ -27,9 +27,6 @@ func setupMapStorage() *storage.Storage {
 func setupDBStorage() *storage.Storage {
 	database.Connect()
 	database.CreateTables()
-
 	st := storage.NewDBStorage(database.DB)
-
-	//load users from database
 	return &st
 }
