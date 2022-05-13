@@ -8,53 +8,53 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Sur0vy/url_shortner.git/internal/config"
-	"github.com/Sur0vy/url_shortner.git/internal/database"
-	"github.com/Sur0vy/url_shortner.git/internal/storage/users"
-	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/Sur0vy/url_shortner.git/internal/storage/helpers"
 	"strconv"
 	"time"
+
+	"github.com/Sur0vy/url_shortner.git/internal/config"
+	"github.com/Sur0vy/url_shortner.git/internal/storage/users"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 type DBStorage struct {
 	userStorage users.UserStorage
-	database    *sql.DB
+	db          *sql.DB
 }
 
-func NewDBStorage(db *sql.DB) Storage {
-	s := &DBStorage{
-		database:    db,
-		userStorage: users.NewDBUserStorage(db),
-	}
+func NewDBStorage(ctx context.Context) Storage {
+	s := &DBStorage{}
+	s.Connect()
+	s.CreateTables(ctx)
+	s.userStorage = users.NewDBUserStorage(s.db)
 	return s
 }
 
-func (s *DBStorage) InsertURL(fullURL string) (string, error) {
-	//проверка на существование
-	short := s.URLExist(fullURL)
+func (s *DBStorage) InsertURL(ctx context.Context, fullURL string) (string, error) {
+	short := s.URLExist(ctx, fullURL)
 	if short != "" {
 		return short, NewURLError("URL is exist")
 	}
 
-	short = strconv.Itoa(s.GetCount() + 1)
+	short = strconv.Itoa(s.GetCount(ctx) + 1)
 
 	fmt.Printf("\tAdd new URL to storage full = %s, short = %s\n", fullURL, short)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctxIn, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	//добавление
-	sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES ($1, $2)",
-		database.TURL, database.FFull, database.FShort)
-	_, err := s.database.ExecContext(ctx, sql, fullURL, short)
+	sqlStr := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES ($1, $2)",
+		helpers.TURL, helpers.FFull, helpers.FShort)
+	_, err := s.db.ExecContext(ctxIn, sqlStr, fullURL, short)
 	if err != nil {
 		return "", err
 	}
 
 	//вставить ссылку на юзера
-	sql = fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES ($1, $2)",
-		database.TUserURL, database.FShort, database.FUserHash)
-	_, err = s.database.ExecContext(ctx, sql, short, config.Cnf.CurrentUserHash)
+	sqlStr = fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES ($1, $2)",
+		helpers.TUserURL, helpers.FShort, helpers.FUserHash)
+	_, err = s.db.ExecContext(ctxIn, sqlStr, short, config.Cnf.CurrentUserHash)
 	if err != nil {
 		return "", err
 	}
@@ -62,15 +62,15 @@ func (s *DBStorage) InsertURL(fullURL string) (string, error) {
 	return short, err
 }
 
-func (s *DBStorage) GetFullURL(shortURL string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (s *DBStorage) GetFullURL(ctx context.Context, shortURL string) (string, error) {
+	ctxIn, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	var ret string
 
-	sql := fmt.Sprintf("SELECT %s FROM %s where %s = $1",
-		database.FFull, database.TURL, database.FShort)
-	row := s.database.QueryRowContext(ctx, sql, shortURL)
+	sqlStr := fmt.Sprintf("SELECT %s FROM %s where %s = $1",
+		helpers.FFull, helpers.TURL, helpers.FShort)
+	row := s.db.QueryRowContext(ctxIn, sqlStr, shortURL)
 	err := row.Scan(&ret)
 	if err != nil {
 		fmt.Printf("\tNo URL in storage: %s\n", shortURL)
@@ -79,15 +79,15 @@ func (s *DBStorage) GetFullURL(shortURL string) (string, error) {
 	return ret, nil
 }
 
-func (s *DBStorage) GetShortURL(fullURL string) (*ShortURL, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (s *DBStorage) GetShortURL(ctx context.Context, fullURL string) (*ShortURL, error) {
+	ctxIn, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	var short string
 
-	sql := fmt.Sprintf("SELECT %s FROM %s WHERE %s = $1",
-		database.FShort, database.TURL, database.FFull)
-	row := s.database.QueryRowContext(ctx, sql, fullURL)
+	sqlStr := fmt.Sprintf("SELECT %s FROM %s WHERE %s = $1",
+		helpers.FShort, helpers.TURL, helpers.FFull)
+	row := s.db.QueryRowContext(ctxIn, sqlStr, fullURL)
 
 	err := row.Scan(&short)
 
@@ -101,14 +101,14 @@ func (s *DBStorage) GetShortURL(fullURL string) (*ShortURL, error) {
 	}, nil
 }
 
-func (s *DBStorage) GetCount() int {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (s *DBStorage) GetCount(ctx context.Context) int {
+	ctxIn, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	var ret int
-	sql := fmt.Sprintf("SELECT count(%s) FROM %s",
-		database.FShort, database.TURL)
-	row := s.database.QueryRowContext(ctx, sql)
+	sqlStr := fmt.Sprintf("SELECT count(%s) FROM %s",
+		helpers.FShort, helpers.TURL)
+	row := s.db.QueryRowContext(ctxIn, sqlStr)
 	err := row.Scan(&ret)
 
 	if err != nil {
@@ -117,25 +117,27 @@ func (s *DBStorage) GetCount() int {
 	return ret
 }
 
-func (s *DBStorage) GetUserURLs(user string) (string, error) {
+func (s *DBStorage) GetUserURLs(ctx context.Context, user string) (string, error) {
 	var userDataList []UserURL
 	fmt.Printf("\tGet user %s urls\n", user)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctxIn, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	sql := fmt.Sprintf("SELECT u.%s, u.%s FROM %s u JOIN %s d ON u.%s = d.%s"+
+	sqlStr := fmt.Sprintf("SELECT u.%s, u.%s FROM %s u JOIN %s d ON u.%s = d.%s"+
 		" JOIN %s r ON d.%s = r.%s WHERE r.%s = $1",
-		database.FFull, database.FShort, database.TURL,
-		database.TUserURL, database.FShort, database.FShort,
-		database.TUser, database.FUserHash, database.FUserHash, database.FUserName)
-	rows, err := s.database.QueryContext(ctx, sql, user)
+		helpers.FFull, helpers.FShort, helpers.TURL,
+		helpers.TUserURL, helpers.FShort, helpers.FShort,
+		helpers.TUser, helpers.FUserHash, helpers.FUserHash, helpers.FUserName)
+	rows, err := s.db.QueryContext(ctxIn, sqlStr, user)
 	if err != nil {
 		return "", err
 	}
 
 	// обязательно закрываем перед возвратом функции
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	// пробегаем по всем записям
 	for rows.Next() {
@@ -161,12 +163,12 @@ func (s *DBStorage) GetUserURLs(user string) (string, error) {
 	return string(data), nil
 }
 
-func (s *DBStorage) AddUser() (string, string) {
-	return s.userStorage.Add()
+func (s *DBStorage) AddUser(ctx context.Context) (string, string) {
+	return s.userStorage.Add(ctx)
 }
 
-func (s *DBStorage) GetUser(hash string) string {
-	return s.userStorage.GetUser(hash)
+func (s *DBStorage) GetUser(ctx context.Context, hash string) string {
+	return s.userStorage.GetUser(ctx, hash)
 }
 
 func (s *DBStorage) Load(val string) error {
@@ -174,15 +176,15 @@ func (s *DBStorage) Load(val string) error {
 	return nil
 }
 
-func (s *DBStorage) URLExist(fullURL string) string {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (s *DBStorage) URLExist(ctx context.Context, fullURL string) string {
+	ctxIn, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	var short string
 
-	sql := fmt.Sprintf("SELECT %s FROM %s WHERE %s = $1 LIMIT 1",
-		database.FShort, database.TURL, database.FFull)
-	row := s.database.QueryRowContext(ctx, sql, fullURL)
+	sqlStr := fmt.Sprintf("SELECT %s FROM %s WHERE %s = $1 LIMIT 1",
+		helpers.FShort, helpers.TURL, helpers.FFull)
+	row := s.db.QueryRowContext(ctxIn, sqlStr, fullURL)
 
 	err := row.Scan(&short)
 
@@ -193,36 +195,38 @@ func (s *DBStorage) URLExist(fullURL string) string {
 	return short
 }
 
-func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+func (s *DBStorage) InsertURLs(ctx context.Context, URLs []URLIdFull) (string, error) {
+	ctxIn, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 
-	sql := fmt.Sprintf("INSERT INTO %s (%s, %s, %s) VALUES($1, $2, $3) ON CONFLICT (%s) DO NOTHING",
-		database.TURL, database.FInfo, database.FFull, database.FShort, database.FShort)
-	insertStmt, err := s.database.PrepareContext(ctx, sql)
+	sqlStr := fmt.Sprintf("INSERT INTO %s (%s, %s, %s) VALUES($1, $2, $3) ON CONFLICT (%s) DO NOTHING",
+		helpers.TURL, helpers.FInfo, helpers.FFull, helpers.FShort, helpers.FShort)
+	insertStmt, err := s.db.PrepareContext(ctxIn, sqlStr)
 	if err != nil {
 		return "", err
 	}
 
-	tx, err := s.database.Begin()
+	tx, err := s.db.Begin()
 	if err != nil {
 		return "", err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
-	txStmt := tx.StmtContext(ctx, insertStmt)
+	txStmt := tx.StmtContext(ctxIn, insertStmt)
 
 	inc := 1
 	existCnt := 0
 	for i, val := range URLs {
-		short := s.URLExist(URLs[i].Full)
+		short := s.URLExist(ctxIn, URLs[i].Full)
 		if short != "" {
 			URLs[i].Short = short
 			existCnt++
 		} else {
-			URLs[i].Short = strconv.Itoa(s.GetCount() + inc)
+			URLs[i].Short = strconv.Itoa(s.GetCount(ctx) + inc)
 			inc++
-			if _, err = txStmt.ExecContext(ctx, val.ID, val.Full, URLs[i].Short); err != nil {
+			if _, err = txStmt.ExecContext(ctxIn, val.ID, val.Full, URLs[i].Short); err != nil {
 				return "", err
 			}
 		}
@@ -233,24 +237,26 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 	}
 
 	//встака ссылки на пользователя
-	sql = fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES($1, $2) ON CONFLICT (%s, %s) DO NOTHING",
-		database.TUserURL, database.FShort, database.FUserHash, database.FShort, database.FUserHash)
-	insertStmt, err = s.database.PrepareContext(ctx, sql)
+	sqlStr = fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES($1, $2) ON CONFLICT (%s, %s) DO NOTHING",
+		helpers.TUserURL, helpers.FShort, helpers.FUserHash, helpers.FShort, helpers.FUserHash)
+	insertStmt, err = s.db.PrepareContext(ctxIn, sqlStr)
 	if err != nil {
 		return "", err
 	}
 
-	tx, err = s.database.Begin()
+	tx, err = s.db.Begin()
 	if err != nil {
 		return "", err
 	}
 
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
-	txStmt = tx.StmtContext(ctx, insertStmt)
+	txStmt = tx.StmtContext(ctxIn, insertStmt)
 
 	for i, val := range URLs {
-		if _, err = txStmt.ExecContext(ctx, val.Short, config.Cnf.CurrentUserHash); err != nil {
+		if _, err = txStmt.ExecContext(ctxIn, val.Short, config.Cnf.CurrentUserHash); err != nil {
 			return "", err
 		}
 		URLs[i].Full = ""
@@ -270,4 +276,58 @@ func (s *DBStorage) InsertURLs(URLs []URLIdFull) (string, error) {
 		return string(data), NewURLError("URL is exist")
 	}
 	return string(data), nil
+}
+
+func (s *DBStorage) Connect() {
+	var err error
+	s.db, err = sql.Open("pgx", config.Cnf.DatabaseDSN)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *DBStorage) CreateTables(ctx context.Context) {
+	ctxIn, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	sqlStr := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s TEXT, %s TEXT UNIQUE, %s TEXT UNIQUE PRIMARY KEY)",
+		helpers.TURL, helpers.FInfo, helpers.FFull, helpers.FShort)
+	_, err := s.db.ExecContext(ctxIn, sqlStr)
+	if err != nil {
+		panic(err)
+	}
+
+	sqlStr = fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s TEXT NOT NULL, %s TEXT NOT NULL PRIMARY KEY)",
+		helpers.TUser, helpers.FUserName, helpers.FUserHash)
+	_, err = s.db.ExecContext(ctxIn, sqlStr)
+	if err != nil {
+		panic(err)
+	}
+
+	sqlStr = fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s TEXT NOT NULL, %s TEXT NOT NULL, PRIMARY KEY (%s, %s))",
+		helpers.TUserURL, helpers.FShort, helpers.FUserHash, helpers.FShort, helpers.FUserHash)
+	_, err = s.db.ExecContext(ctxIn, sqlStr)
+	if err != nil {
+		panic(err)
+	}
+
+	sqlStr = fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT IF EXISTS fk_u_us_URLID;"+
+		"ALTER TABLE %s ADD CONSTRAINT fk_u_us_URLID FOREIGN KEY (%s) REFERENCES %s (%s);",
+		helpers.TUserURL, helpers.TUserURL, helpers.FShort, helpers.TURL, helpers.FShort)
+	_, err = s.db.ExecContext(ctxIn, sqlStr)
+	if err != nil {
+		panic(err)
+	}
+
+	sqlStr = fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT IF EXISTS fk_u_us_UserID;"+
+		"ALTER TABLE %s ADD CONSTRAINT fk_u_us_UserID FOREIGN KEY (%s) REFERENCES %s (%s);",
+		helpers.TUserURL, helpers.TUserURL, helpers.FUserHash, helpers.TUser, helpers.FUserHash)
+	_, err = s.db.ExecContext(ctxIn, sqlStr)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *DBStorage) Ping() error {
+	return s.db.Ping()
 }

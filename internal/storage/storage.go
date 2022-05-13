@@ -1,5 +1,7 @@
 package storage
 
+import "context"
+
 type URL struct {
 	User  string `json:"user"`
 	Full  string `json:"url"`
@@ -26,13 +28,14 @@ type URLIdFull struct {
 }
 
 type Storage interface {
-	InsertURL(fullURL string) (string, error)
-	GetFullURL(shortURL string) (string, error)
-	GetShortURL(fullURL string) (*ShortURL, error)
+	InsertURL(ctx context.Context, fullURL string) (string, error)
+	GetFullURL(ctx context.Context, shortURL string) (string, error)
+	GetShortURL(ctx context.Context, fullURL string) (*ShortURL, error)
 	Load(val string) error
-	GetCount() int
-	GetUserURLs(user string) (string, error)
-	AddUser() (string, string)
-	GetUser(hash string) string
-	InsertURLs([]URLIdFull) (string, error)
+	GetCount(ctx context.Context) int
+	GetUserURLs(ctx context.Context, user string) (string, error)
+	AddUser(ctx context.Context) (string, string)
+	GetUser(ctx context.Context, hash string) string
+	InsertURLs(ctx context.Context, URLs []URLIdFull) (string, error)
+	Ping() error
 }

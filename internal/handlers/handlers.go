@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Sur0vy/url_shortner.git/internal/config"
-	"github.com/Sur0vy/url_shortner.git/internal/database"
-	"github.com/Sur0vy/url_shortner.git/internal/storage"
-	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/Sur0vy/url_shortner.git/internal/config"
+	"github.com/Sur0vy/url_shortner.git/internal/storage"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Handle interface {
@@ -35,7 +36,7 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	shortURL := c.Param("id")
 	fmt.Printf("GetFullURL: short URL(param) = %s\n", shortURL)
-	fullURL, err := h.storage.GetFullURL(shortURL)
+	fullURL, err := h.storage.GetFullURL(c, shortURL)
 	if err != nil {
 		fmt.Printf("\tError: no full url")
 		c.Writer.WriteHeader(http.StatusNotFound)
@@ -53,7 +54,7 @@ func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 	fullURL, _ := ioutil.ReadAll(c.Request.Body)
 	fmt.Printf("CreateShortURL: full URL(body) = %s\n", string(fullURL))
 	var status = http.StatusCreated
-	shortURL, err := h.storage.InsertURL(string(fullURL))
+	shortURL, err := h.storage.InsertURL(c, string(fullURL))
 	if (err != nil) && (errors.Is(err, err.(*storage.URLError))) {
 		status = http.StatusConflict
 	}
@@ -82,10 +83,10 @@ func (h *BaseHandler) GetShortURL(c *gin.Context) {
 	fmt.Printf("\tfull URL = %s\n", fullURL.Full)
 	var shortURL *storage.ShortURL
 	var resStatus int
-	shortURL, err = h.storage.GetShortURL(fullURL.Full)
+	shortURL, err = h.storage.GetShortURL(c, fullURL.Full)
 	if err != nil {
 		fmt.Printf("\tError: no short URL, creating\n")
-		strURL, _ := h.storage.InsertURL(fullURL.Full)
+		strURL, _ := h.storage.InsertURL(c, fullURL.Full)
 		shortURL = &storage.ShortURL{
 			Short: strURL,
 		}
@@ -109,7 +110,7 @@ func (h *BaseHandler) ResponseBadRequest(c *gin.Context) {
 
 func (h *BaseHandler) GetUserURLs(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "application/json")
-	users, err := h.storage.GetUserURLs(config.Cnf.CurrentUser)
+	users, err := h.storage.GetUserURLs(c, config.Cnf.CurrentUser)
 	if err != nil {
 		c.AbortWithStatus(http.StatusNoContent)
 	} else {
@@ -118,7 +119,7 @@ func (h *BaseHandler) GetUserURLs(c *gin.Context) {
 }
 
 func (h *BaseHandler) Ping(c *gin.Context) {
-	err := database.DB.Ping()
+	err := h.storage.Ping()
 	if err == nil {
 		c.Status(http.StatusOK)
 	} else {
@@ -134,7 +135,7 @@ func (h *BaseHandler) AppendGroup(c *gin.Context) {
 		return
 	}
 	//сохранить URL в БД и сразу получаем JSON с сокращенными URL
-	res, err := h.storage.InsertURLs(URLs)
+	res, err := h.storage.InsertURLs(c, URLs)
 	if err != nil {
 		if errors.Is(err, err.(*storage.URLError)) {
 			c.String(http.StatusConflict, res)

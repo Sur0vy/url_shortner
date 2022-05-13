@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,7 +28,7 @@ func NewMapStorage() Storage {
 		userStorage: users.NewMapUserStorage(),
 	}
 
-	s.userStorage.LoadFromFile()
+	_ = s.userStorage.LoadFromFile()
 
 	err := s.Load(config.Cnf.StoragePath)
 	if err != nil {
@@ -36,8 +37,8 @@ func NewMapStorage() Storage {
 	return s
 }
 
-func (s *MapStorage) InsertURL(fullURL string) (string, error) {
-	short, err := s.GetShortURL(fullURL)
+func (s *MapStorage) InsertURL(ctx context.Context, fullURL string) (string, error) {
+	short, err := s.GetShortURL(ctx, fullURL)
 	if err == nil {
 		return short.Short, NewURLError("URL is exist")
 	}
@@ -52,12 +53,15 @@ func (s *MapStorage) InsertURL(fullURL string) (string, error) {
 	fmt.Printf("\tAdd new URL to storage = %s\n", URLItem)
 	s.Data[s.counter] = URLItem
 	if len(s.fileStorageName) > 0 {
-		s.addToFile(&URLItem)
+		err = s.addToFile(&URLItem)
+		if err != nil {
+			return "", err
+		}
 	}
 	return URLItem.Short, nil
 }
 
-func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
+func (s *MapStorage) GetFullURL(_ context.Context, shortURL string) (string, error) {
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
 	for _, element := range s.Data {
@@ -70,7 +74,7 @@ func (s *MapStorage) GetFullURL(shortURL string) (string, error) {
 	return "", errors.New("wrong id")
 }
 
-func (s *MapStorage) GetShortURL(fullURL string) (*ShortURL, error) {
+func (s *MapStorage) GetShortURL(_ context.Context, fullURL string) (*ShortURL, error) {
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
 	for _, element := range s.Data {
@@ -91,7 +95,9 @@ func (s *MapStorage) Load(val string) error {
 		return err
 	}
 	s.fileStorageName = val
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	scanner := bufio.NewScanner(file)
 
@@ -120,7 +126,9 @@ func (s *MapStorage) addToFile(URLItem *URL) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	data, err := json.Marshal(&URLItem)
 	if err != nil {
@@ -142,11 +150,11 @@ func (s *MapStorage) addToFile(URLItem *URL) error {
 	return writer.Flush()
 }
 
-func (s *MapStorage) GetCount() int {
+func (s *MapStorage) GetCount(_ context.Context) int {
 	return s.counter
 }
 
-func (s *MapStorage) GetUserURLs(user string) (string, error) {
+func (s *MapStorage) GetUserURLs(_ context.Context, user string) (string, error) {
 	var userDataList []UserURL
 	fmt.Printf("\tGet user %s urls\n", user)
 	for _, element := range s.Data {
@@ -169,15 +177,23 @@ func (s *MapStorage) GetUserURLs(user string) (string, error) {
 	return string(data), nil
 }
 
-func (s *MapStorage) AddUser() (string, string) {
-	return s.userStorage.Add()
+func (s *MapStorage) AddUser(ctx context.Context) (string, string) {
+	return s.userStorage.Add(ctx)
 }
 
-func (s *MapStorage) GetUser(hash string) string {
-	return s.userStorage.GetUser(hash)
+func (s *MapStorage) GetUser(ctx context.Context, hash string) string {
+	return s.userStorage.GetUser(ctx, hash)
 }
 
-func (s *MapStorage) InsertURLs([]URLIdFull) (string, error) {
+func (s *MapStorage) InsertURLs(_ context.Context, _ []URLIdFull) (string, error) {
 	//TODO реализовать логику + проверка на попытку вставить дубликат
 	return "", nil
+}
+
+func (s *MapStorage) InvokeDeferFunction() {
+	//TODO тут нечего делать, просто заглушка
+}
+
+func (s *MapStorage) Ping() error {
+	return nil
 }

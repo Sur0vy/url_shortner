@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bufio"
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -64,7 +65,7 @@ func TestMapStorage_GetFullURL(t *testing.T) {
 				counter: tt.fields.counter,
 				Data:    tt.fields.data,
 			}
-			fullURL, err := s.GetFullURL(tt.args.shortURL)
+			fullURL, err := s.GetFullURL(context.Background(), tt.args.shortURL)
 			if !tt.wantErr {
 				require.NoError(t, err)
 				assert.Equal(t, fullURL, tt.want)
@@ -102,11 +103,11 @@ func TestMapStorage_InsertURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms := NewMapStorage()
-			sh, _ := ms.InsertURL(tt.fields.data[tt.fields.counter].Full)
+			sh, _ := ms.InsertURL(context.Background(), tt.fields.data[tt.fields.counter].Full)
 			//пока обработчик ошибок не предусмотрен, но над тестом стоит подумать
 			if !tt.wantErr {
 				assert.Equal(t, sh, tt.fields.data[tt.fields.counter].Short)
-				assert.Equal(t, ms.GetCount(), tt.fields.counter)
+				assert.Equal(t, ms.GetCount(context.Background()), tt.fields.counter)
 			}
 		})
 	}
@@ -185,7 +186,7 @@ func TestMapStorage_GetShortURL(t *testing.T) {
 				counter: tt.fields.counter,
 				Data:    tt.fields.data,
 			}
-			fullURL, err := s.GetShortURL(tt.args.fullURL)
+			fullURL, err := s.GetShortURL(context.Background(), tt.args.fullURL)
 			if !tt.wantErr {
 				require.NoError(t, err)
 				assert.Equal(t, fullURL.Short, tt.want)
@@ -246,7 +247,7 @@ func TestMapStorage_Load(t *testing.T) {
 			ms.Load(tt.args.fileName)
 
 			for _, item := range tt.want.url {
-				ShortURL, err := ms.GetShortURL(item.Full)
+				ShortURL, err := ms.GetShortURL(context.Background(), item.Full)
 				assert.Nil(t, err)
 				if err == nil {
 					assert.Equal(t, item.Short, ShortURL.Short)
@@ -327,14 +328,14 @@ func TestMapStorage_addToFile(t *testing.T) {
 			ms.Load(tt.args.fileName)
 			defer os.Remove(tt.args.fileName)
 			for _, item := range tt.args.data {
-				ms.InsertURL(item.Full)
+				ms.InsertURL(context.Background(), item.Full)
 			}
 
 			ms2 := NewMapStorage()
 			ms2.Load(tt.args.fileName)
 
 			for _, data := range tt.want.url {
-				ShortURL, err := ms2.GetShortURL(data.Full)
+				ShortURL, err := ms2.GetShortURL(context.Background(), data.Full)
 				if tt.wantErr == false {
 					assert.Nil(t, err)
 					if err == nil {

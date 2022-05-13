@@ -2,6 +2,7 @@ package users
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"os"
 	"strconv"
@@ -26,18 +27,18 @@ func NewMapUserStorage() UserStorage {
 	}
 }
 
-func (u *MapUserStorage) Add() (string, string) {
+func (u *MapUserStorage) Add(_ context.Context) (string, string) {
 	u.mtx.Lock()
 	defer u.mtx.Unlock()
 	u.counter++
 	user := User + strconv.Itoa(u.counter)
 	hash := GenerateHash(user)
 	u.Data[hash] = user
-	u.writeToFile()
+	_ = u.writeToFile()
 	return user, hash
 }
 
-func (u *MapUserStorage) GetUser(hash string) string {
+func (u *MapUserStorage) GetUser(_ context.Context, hash string) string {
 	u.mtx.RLock()
 	defer u.mtx.RUnlock()
 	user := u.Data[hash]
@@ -49,7 +50,9 @@ func (u *MapUserStorage) LoadFromFile() error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	scanner := bufio.NewScanner(file)
 
@@ -73,7 +76,9 @@ func (u *MapUserStorage) writeToFile() error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	data, err := json.Marshal(u.Data)
 	if err != nil {
@@ -89,6 +94,6 @@ func (u *MapUserStorage) writeToFile() error {
 	return writer.Flush()
 }
 
-func (u *MapUserStorage) GetCount() int {
+func (u *MapUserStorage) GetCount(_ context.Context) int {
 	return u.counter
 }

@@ -1,6 +1,7 @@
 package users
 
 import (
+	"context"
 	"crypto/md5"
 	"fmt"
 )
@@ -11,10 +12,10 @@ const (
 )
 
 type UserStorage interface {
-	Add() (string, string)
-	GetUser(hash string) string
+	Add(ctx context.Context) (string, string)
+	GetUser(ctx context.Context, hash string) string
 	LoadFromFile() error
-	GetCount() int
+	GetCount(ctx context.Context) int
 }
 
 func GenerateHash(val string) string {
