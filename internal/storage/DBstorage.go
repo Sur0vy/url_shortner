@@ -199,9 +199,10 @@ func (s *DBStorage) URLExist(ctx context.Context, fullURL string) string {
 	err := row.Scan(&short)
 
 	if err != nil {
-		fmt.Printf("\tSQL count error: %s\n", fullURL)
+		fmt.Printf("\tno rows in table, %s does't exist \n", fullURL)
 		return ""
 	}
+	fmt.Printf("\t%s there are already in the table\n", fullURL)
 	return short
 }
 
@@ -300,7 +301,7 @@ func (s *DBStorage) CreateTables(ctx context.Context) {
 	ctxIn, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	sqlStr := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s TEXT, %s TEXT UNIQUE, %s TEXT UNIQUE PRIMARY KEY, %s TEXT)",
+	sqlStr := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s TEXT, %s TEXT UNIQUE, %s TEXT UNIQUE PRIMARY KEY, %s TEXT DEFAULT '')",
 		helpers.TURL, helpers.FInfo, helpers.FFull, helpers.FShort, helpers.FStatus)
 	_, err := s.db.ExecContext(ctxIn, sqlStr)
 	if err != nil {

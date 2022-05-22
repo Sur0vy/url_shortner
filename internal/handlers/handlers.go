@@ -181,7 +181,7 @@ func readURLsFromJSON(reader io.ReadCloser) ([]storage.URLIdFull, error) {
 		fmt.Printf("\tURL unmarshal error: %s\n", err)
 		return nil, err
 	}
-	fmt.Printf("\tURL unmarshal success")
+	fmt.Printf("\tURL unmarshal success\n")
 	return URLs, nil
 }
 
