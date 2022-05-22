@@ -11,9 +11,12 @@ import (
 var Cnf Config
 
 type Config struct {
-	ServerAddress string `env:"SERVER_ADDRESS"`
-	BaseURL       string `env:"BASE_URL"`
-	StoragePath   string `env:"FILE_STORAGE_PATH"`
+	ServerAddress   string `env:"SERVER_ADDRESS"`
+	BaseURL         string `env:"BASE_URL"`
+	StoragePath     string `env:"FILE_STORAGE_PATH"`
+	DatabaseDSN     string `env:"DATABASE_DSN"`
+	CurrentUser     string
+	CurrentUserHash string
 }
 
 func newConfig() *Config {
@@ -24,16 +27,16 @@ func newConfig() *Config {
 	}
 }
 
-type ConfigOption func(*Config)
+type option func(*Config)
 
-func LoadParams() ConfigOption {
+func LoadParams() option {
 	return func(c *Config) {
 		c.flagParams()
 		env.Parse(c)
 	}
 }
 
-func SetupConfig(opts ...ConfigOption) *Config {
+func Setup(opts ...option) *Config {
 	c := newConfig()
 	for _, opt := range opts {
 		opt(c)
@@ -47,6 +50,7 @@ func (c *Config) flagParams() {
 	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "host to listen on")
 	flag.StringVar(&c.BaseURL, "b", c.BaseURL, "base address")
 	flag.StringVar(&c.StoragePath, "f", c.StoragePath, "path to storage file")
+	flag.StringVar(&c.DatabaseDSN, "d", c.DatabaseDSN, "address to database connection")
 	flag.Parse()
 }
 
