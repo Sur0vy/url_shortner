@@ -15,6 +15,7 @@ func SetupServer(s *storage.Storage) *gin.Engine {
 	router.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithDecompressFn(gzip.DefaultDecompressHandle)))
 	api := router.Group("/api")
 	api.GET("/user/urls", handler.GetUserURLs)
+	api.DELETE("/user/urls", handler.DeleteUserURLs)
 	api.POST("/shorten", handler.GetShortURL)
 	api.POST("/shorten/batch", handler.AppendGroup)
 

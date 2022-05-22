@@ -38,9 +38,15 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 	fmt.Printf("GetFullURL: short URL(param) = %s\n", shortURL)
 	fullURL, err := h.storage.GetFullURL(c, shortURL)
 	if err != nil {
-		fmt.Printf("\tError: no full url")
-		c.Writer.WriteHeader(http.StatusNotFound)
-		return
+		if errors.Is(err, err.(*storage.URLGoneError)) {
+			fmt.Printf("\tError: url gone")
+			c.Writer.WriteHeader(http.StatusGone)
+			return
+		} else {
+			fmt.Printf("\tError: no full url")
+			c.Writer.WriteHeader(http.StatusNotFound)
+			return
+		}
 	} else {
 		fmt.Printf("\tfull URL = %s\n", fullURL)
 		if !strings.HasPrefix(fullURL, config.HTTP) {
@@ -118,6 +124,19 @@ func (h *BaseHandler) GetUserURLs(c *gin.Context) {
 	}
 }
 
+func (h *BaseHandler) DeleteUserURLs(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json")
+	IDs, err := readIDsFromJSON(c.Request.Body)
+
+	if err != nil {
+		c.String(http.StatusBadRequest, "")
+		return
+	}
+
+	h.storage.DeleteShortURLs(c, config.Cnf.CurrentUserHash, IDs)
+	c.String(http.StatusAccepted, "")
+}
+
 func (h *BaseHandler) Ping(c *gin.Context) {
 	err := h.storage.Ping()
 	if err == nil {
@@ -153,7 +172,7 @@ func readURLsFromJSON(reader io.ReadCloser) ([]storage.URLIdFull, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("GetShortURL: body(body) = %s\n", input)
+	fmt.Printf("readURLsFromJSON: body(body) = %s\n", input)
 
 	var URLs []storage.URLIdFull
 	if err := json.Unmarshal(input, &URLs); err != nil {
@@ -162,4 +181,20 @@ func readURLsFromJSON(reader io.ReadCloser) ([]storage.URLIdFull, error) {
 	}
 	fmt.Printf("\tURL unmarshal success")
 	return URLs, nil
+}
+
+func readIDsFromJSON(reader io.ReadCloser) ([]string, error) {
+	input, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("readIDsFromJSON: body(body) = %s\n", input)
+
+	var IDs []string
+	if err := json.Unmarshal(input, &IDs); err != nil {
+		fmt.Printf("\tID unmarshal error: %s\n", err)
+		return nil, err
+	}
+	fmt.Printf("\tID unmarshal success")
+	return IDs, nil
 }

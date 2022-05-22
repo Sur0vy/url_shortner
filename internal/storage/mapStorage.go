@@ -186,7 +186,6 @@ func (s *MapStorage) GetUser(ctx context.Context, hash string) string {
 }
 
 func (s *MapStorage) InsertURLs(_ context.Context, _ []URLIdFull) (string, error) {
-	//TODO реализовать логику + проверка на попытку вставить дубликат
 	return "", nil
 }
 
@@ -195,5 +194,9 @@ func (s *MapStorage) InvokeDeferFunction() {
 }
 
 func (s *MapStorage) Ping() error {
+	return nil
+}
+
+func (s *MapStorage) DeleteShortURLs(_ context.Context, _ string, _ []string) error {
 	return nil
 }

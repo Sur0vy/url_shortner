@@ -37,5 +37,6 @@ type Storage interface {
 	AddUser(ctx context.Context) (string, string)
 	GetUser(ctx context.Context, hash string) string
 	InsertURLs(ctx context.Context, URLs []URLIdFull) (string, error)
+	DeleteShortURLs(ctx context.Context, hash string, IDs []string) error
 	Ping() error
 }
