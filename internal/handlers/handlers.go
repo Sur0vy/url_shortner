@@ -38,7 +38,9 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 	fmt.Printf("GetFullURL: short URL(param) = %s\n", shortURL)
 	fullURL, err := h.storage.GetFullURL(c, shortURL)
 	if err != nil {
-		if errors.Is(err, err.(*storage.URLGoneError)) {
+		var errG storage.URLGoneError
+		//if errors.Is(err, err.(*storage.URLGoneError)) {
+		if errors.Is(err, errG.Err) {
 			fmt.Printf("\tError: url gone")
 			c.Writer.WriteHeader(http.StatusGone)
 			return

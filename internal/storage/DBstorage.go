@@ -357,12 +357,9 @@ func (s *DBStorage) DeleteShortURLs(ctx context.Context, hash string, IDs []stri
 			helpers.FShort, helpers.FShort, helpers.FUserHash, helpers.FUserHash,
 			helpers.FShort, helpers.FUserHash)
 
-		//ids := &pgtype.Int4Array{}
-		//ids.Set(IDs)
-
 		_, err := s.db.ExecContext(ctxIn, sqlStr, helpers.VDel, IDs, hash)
 		if err != nil {
-			fmt.Printf(err.Error())
+			fmt.Println(err)
 			return
 		}
 		defer s.idle.Set(true)

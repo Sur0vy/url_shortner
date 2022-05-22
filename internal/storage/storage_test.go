@@ -272,17 +272,13 @@ func TestMapStorage_addToFile(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Test add to file 2 item write/read",
+			name: "Test add to file 1 item write/read",
 			args: args{
 				fileName: "\test.txt",
 				data: map[int]URL{
 					1: {
 						Full:  "http://www.werewrewr.com/f7",
 						Short: "1",
-					},
-					2: {
-						Full:  "http://www.werewrewr.com/f7/saf",
-						Short: "2",
 					},
 				},
 			},
@@ -291,10 +287,6 @@ func TestMapStorage_addToFile(t *testing.T) {
 					1: {
 						Full:  "http://www.werewrewr.com/f7",
 						Short: "1",
-					},
-					2: {
-						Full:  "http://www.werewrewr.com/f7/saf",
-						Short: "2",
 					},
 				},
 			},
