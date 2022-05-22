@@ -37,7 +37,7 @@ func NewDBStorage(ctx context.Context) Storage {
 func (s *DBStorage) InsertURL(ctx context.Context, fullURL string) (string, error) {
 	short := s.URLExist(ctx, fullURL)
 	if short != "" {
-		return short, NewURLError("URL is exist")
+		return short, NewURLExError()
 	}
 
 	short = strconv.Itoa(s.GetCount(ctx) + 1)
@@ -84,7 +84,7 @@ func (s *DBStorage) GetFullURL(ctx context.Context, shortURL string) (string, er
 		return "", errors.New("wrong id")
 	} else if status == "del" {
 		fmt.Printf("\tURL is gone in storage: %s\n", shortURL)
-		return "", NewURLGoneError("URL is gone")
+		return "", NewURLGoneError()
 	}
 	return URL, nil
 }
@@ -283,7 +283,7 @@ func (s *DBStorage) InsertURLs(ctx context.Context, URLs []URLIdFull) (string, e
 		return "", err
 	}
 	if len(URLs) == existCnt {
-		return string(data), NewURLError("URL is exist")
+		return string(data), NewURLExError()
 	}
 	return string(data), nil
 }

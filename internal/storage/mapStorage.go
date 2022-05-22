@@ -40,7 +40,7 @@ func NewMapStorage() Storage {
 func (s *MapStorage) InsertURL(ctx context.Context, fullURL string) (string, error) {
 	short, err := s.GetShortURL(ctx, fullURL)
 	if err == nil {
-		return short.Short, NewURLError("URL is exist")
+		return short.Short, NewURLGoneError()
 	}
 	s.counter++
 	var URLItem = URL{

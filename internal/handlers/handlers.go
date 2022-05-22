@@ -38,13 +38,12 @@ func (h *BaseHandler) GetFullURL(c *gin.Context) {
 	fmt.Printf("GetFullURL: short URL(param) = %s\n", shortURL)
 	fullURL, err := h.storage.GetFullURL(c, shortURL)
 	if err != nil {
-		var errG storage.URLGoneError
-		//if errors.Is(err, err.(*storage.URLGoneError)) {
-		if errors.Is(err, errG.Err) {
+		switch err.(type) {
+		case *storage.URLGoneError:
 			fmt.Printf("\tError: url gone")
 			c.Writer.WriteHeader(http.StatusGone)
 			return
-		} else {
+		default:
 			fmt.Printf("\tError: no full url")
 			c.Writer.WriteHeader(http.StatusNotFound)
 			return
@@ -63,7 +62,7 @@ func (h *BaseHandler) CreateShortURL(c *gin.Context) {
 	fmt.Printf("CreateShortURL: full URL(body) = %s\n", string(fullURL))
 	var status = http.StatusCreated
 	shortURL, err := h.storage.InsertURL(c, string(fullURL))
-	if (err != nil) && (errors.Is(err, err.(*storage.URLError))) {
+	if (err != nil) && (errors.Is(err, err.(*storage.URLExError))) {
 		status = http.StatusConflict
 	}
 	exShortURL := storage.ExpandShortURL(shortURL)
@@ -158,10 +157,11 @@ func (h *BaseHandler) AppendGroup(c *gin.Context) {
 	//сохранить URL в БД и сразу получаем JSON с сокращенными URL
 	res, err := h.storage.InsertURLs(c, URLs)
 	if err != nil {
-		if errors.Is(err, err.(*storage.URLError)) {
+		switch err.(type) {
+		case *storage.URLExError:
 			c.String(http.StatusConflict, res)
 			return
-		} else {
+		default:
 			c.String(http.StatusInternalServerError, "")
 			return
 		}

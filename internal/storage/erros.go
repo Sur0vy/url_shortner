@@ -1,36 +1,29 @@
 package storage
 
-import (
-	"errors"
-	"fmt"
-)
-
-type URLError struct {
-	Err error
+type URLExError struct {
+	message string
 }
 
 type URLGoneError struct {
-	Err error
+	message string
 }
 
-func (e *URLError) Error() string {
-	return fmt.Sprintf("%v", e.Err)
+func (e *URLExError) Error() string {
+	return e.message
 }
 
-func NewURLError(errMsg string) error {
-	err := errors.New(errMsg)
-	return &URLError{
-		Err: err,
+func NewURLExError() *URLExError {
+	return &URLExError{
+		message: "URL is exist",
 	}
 }
 
 func (e *URLGoneError) Error() string {
-	return fmt.Sprintf("%v", e.Err)
+	return e.message
 }
 
-func NewURLGoneError(errMsg string) error {
-	err := errors.New(errMsg)
+func NewURLGoneError() *URLGoneError {
 	return &URLGoneError{
-		Err: err,
+		message: "URL is gone",
 	}
 }
