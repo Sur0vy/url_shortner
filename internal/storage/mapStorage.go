@@ -40,7 +40,7 @@ func NewMapStorage() Storage {
 func (s *MapStorage) InsertURL(ctx context.Context, fullURL string) (string, error) {
 	short, err := s.GetShortURL(ctx, fullURL)
 	if err == nil {
-		return short.Short, NewURLError("URL is exist")
+		return short.Short, NewURLGoneError()
 	}
 	s.counter++
 	var URLItem = URL{
@@ -186,7 +186,6 @@ func (s *MapStorage) GetUser(ctx context.Context, hash string) string {
 }
 
 func (s *MapStorage) InsertURLs(_ context.Context, _ []URLIdFull) (string, error) {
-	//TODO реализовать логику + проверка на попытку вставить дубликат
 	return "", nil
 }
 
@@ -195,5 +194,9 @@ func (s *MapStorage) InvokeDeferFunction() {
 }
 
 func (s *MapStorage) Ping() error {
+	return nil
+}
+
+func (s *MapStorage) DeleteShortURLs(_ context.Context, _ string, _ []string) error {
 	return nil
 }

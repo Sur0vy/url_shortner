@@ -7,6 +7,9 @@ const (
 	FShort    string = "URL_short"
 	FFull     string = "URL_full"
 	FInfo     string = "URL_info"
+	FStatus   string = "URL_status"
 	FUserName string = "User_name"
 	FUserHash string = "User_hash"
+
+	VDel string = "del"
 )

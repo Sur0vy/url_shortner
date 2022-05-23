@@ -8,22 +8,26 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Sur0vy/url_shortner.git/internal/storage/helpers"
 	"strconv"
 	"time"
 
-	"github.com/Sur0vy/url_shortner.git/internal/config"
-	"github.com/Sur0vy/url_shortner.git/internal/storage/users"
 	_ "github.com/jackc/pgx/v4/stdlib"
+
+	"github.com/Sur0vy/url_shortner.git/internal/config"
+	"github.com/Sur0vy/url_shortner.git/internal/storage/helpers"
+	"github.com/Sur0vy/url_shortner.git/internal/storage/users"
 )
 
 type DBStorage struct {
 	userStorage users.UserStorage
 	db          *sql.DB
+	idle        *helpers.AtomicBool
 }
 
 func NewDBStorage(ctx context.Context) Storage {
-	s := &DBStorage{}
+	s := &DBStorage{
+		idle: helpers.NewAtomicBool(true),
+	}
 	s.Connect()
 	s.CreateTables(ctx)
 	s.userStorage = users.NewDBUserStorage(s.db)
@@ -33,7 +37,7 @@ func NewDBStorage(ctx context.Context) Storage {
 func (s *DBStorage) InsertURL(ctx context.Context, fullURL string) (string, error) {
 	short := s.URLExist(ctx, fullURL)
 	if short != "" {
-		return short, NewURLError("URL is exist")
+		return short, NewURLExError()
 	}
 
 	short = strconv.Itoa(s.GetCount(ctx) + 1)
@@ -66,17 +70,23 @@ func (s *DBStorage) GetFullURL(ctx context.Context, shortURL string) (string, er
 	ctxIn, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	var ret string
+	var (
+		URL    string
+		status string
+	)
 
-	sqlStr := fmt.Sprintf("SELECT %s FROM %s where %s = $1",
-		helpers.FFull, helpers.TURL, helpers.FShort)
+	sqlStr := fmt.Sprintf("SELECT %s, %s FROM %s where %s = $1",
+		helpers.FFull, helpers.FStatus, helpers.TURL, helpers.FShort)
 	row := s.db.QueryRowContext(ctxIn, sqlStr, shortURL)
-	err := row.Scan(&ret)
+	err := row.Scan(&URL, &status)
 	if err != nil {
 		fmt.Printf("\tNo URL in storage: %s\n", shortURL)
 		return "", errors.New("wrong id")
+	} else if status == "del" {
+		fmt.Printf("\tURL is gone in storage: %s\n", shortURL)
+		return "", NewURLGoneError()
 	}
-	return ret, nil
+	return URL, nil
 }
 
 func (s *DBStorage) GetShortURL(ctx context.Context, fullURL string) (*ShortURL, error) {
@@ -189,9 +199,10 @@ func (s *DBStorage) URLExist(ctx context.Context, fullURL string) string {
 	err := row.Scan(&short)
 
 	if err != nil {
-		fmt.Printf("\tSQL count error: %s\n", fullURL)
+		fmt.Printf("\tno rows in table, %s does't exist \n", fullURL)
 		return ""
 	}
+	fmt.Printf("\t%s there are already in the table\n", fullURL)
 	return short
 }
 
@@ -273,7 +284,7 @@ func (s *DBStorage) InsertURLs(ctx context.Context, URLs []URLIdFull) (string, e
 		return "", err
 	}
 	if len(URLs) == existCnt {
-		return string(data), NewURLError("URL is exist")
+		return string(data), NewURLExError()
 	}
 	return string(data), nil
 }
@@ -290,8 +301,8 @@ func (s *DBStorage) CreateTables(ctx context.Context) {
 	ctxIn, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	sqlStr := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s TEXT, %s TEXT UNIQUE, %s TEXT UNIQUE PRIMARY KEY)",
-		helpers.TURL, helpers.FInfo, helpers.FFull, helpers.FShort)
+	sqlStr := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s TEXT, %s TEXT UNIQUE, %s TEXT UNIQUE PRIMARY KEY, %s TEXT DEFAULT '')",
+		helpers.TURL, helpers.FInfo, helpers.FFull, helpers.FShort, helpers.FStatus)
 	_, err := s.db.ExecContext(ctxIn, sqlStr)
 	if err != nil {
 		panic(err)
@@ -330,4 +341,29 @@ func (s *DBStorage) CreateTables(ctx context.Context) {
 
 func (s *DBStorage) Ping() error {
 	return s.db.Ping()
+}
+
+func (s *DBStorage) DeleteShortURLs(ctx context.Context, hash string, IDs []string) error {
+	go func() {
+		s.idle.Set(false)
+
+		ctxIn, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+
+		//добавление
+		sqlStr := fmt.Sprintf("UPDATE %s AS u SET %s = $1 FROM %s AS d, %s AS r"+
+			" WHERE (d.%s = u.%s) AND (r.%s = d.%s) AND"+
+			" u.%s = ANY($2) AND (r.%s = $3)",
+			helpers.TURL, helpers.FStatus, helpers.TUserURL, helpers.TUser,
+			helpers.FShort, helpers.FShort, helpers.FUserHash, helpers.FUserHash,
+			helpers.FShort, helpers.FUserHash)
+
+		_, err := s.db.ExecContext(ctxIn, sqlStr, helpers.VDel, IDs, hash)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer s.idle.Set(true)
+	}()
+	return nil
 }
